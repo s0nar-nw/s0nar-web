@@ -36,7 +36,7 @@ export default function Home() {
         aria-hidden="true"
         className="absolute inset-0 z-1 bg-[radial-gradient(circle,rgba(0,0,0,0.85)_0%,rgba(0,0,0,0.4)_40%,transparent_70%)]"
       />
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
@@ -49,15 +49,15 @@ export default function Home() {
           height={500}
           className="w-48 sm:w-56 md:w-64 lg:w-[450px]"
         />
-        <motion.p 
+        <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3, duration: 0.8 }}
           className="font-bold tracking-[0.1em] text-xs sm:text-lg text-neutral-400 font-jetbrains"
         >
-          The on-chain pulse of Solana's network health.
+          The on-chain pulse of Solana&apos;s network health.
         </motion.p>
-        <motion.p 
+        <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6, duration: 0.8 }}
