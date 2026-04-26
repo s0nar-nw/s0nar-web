@@ -1,17 +1,33 @@
 import { createHash } from "crypto";
 import { NextResponse } from "next/server";
 import { idl } from "@/lib/contract";
-import { type ObserverView, type RegionScoreView, type SonarSnapshot } from "@/lib/sonar-data";
+import {
+  type ObserverView,
+  type RegionScoreView,
+  type SonarSnapshot,
+} from "@/lib/sonar-data";
 
 export const dynamic = "force-dynamic";
 
-const RPC_URL = process.env.SOLANA_RPC_URL || process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com";
+const RPC_URL =
+  process.env.SOLANA_RPC_URL ||
+  process.env.NEXT_PUBLIC_SOLANA_RPC_URL ||
+  "https://api.devnet.solana.com";
 const PROGRAM_ID = idl.address;
 const LAMPORTS_PER_SOL = 1_000_000_000;
 const STALE_SLOT_THRESHOLD = 150;
-const REGION_NAMES = ["Asia", "US", "EU", "South America", "Africa", "Oceania", "Other"] as const;
+const REGION_NAMES = [
+  "Asia",
+  "US",
+  "EU",
+  "South America",
+  "Africa",
+  "Oceania",
+  "Other",
+] as const;
 const REGION_IDS = ["asia", "us", "eu", "sa", "africa", "oc", "other"] as const;
-const BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+const BASE58_ALPHABET =
+  "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
 type RpcAccount = {
   pubkey: string;
@@ -137,7 +153,10 @@ function regionName(region: number) {
   return REGION_NAMES[region] ?? "Other";
 }
 
-function decodeRegionScore(reader: Reader, currentSlot: number): RegionScoreView {
+function decodeRegionScore(
+  reader: Reader,
+  currentSlot: number,
+): RegionScoreView {
   const region = reader.u8();
   const observers = reader.u16();
   const score = reader.u8();
@@ -158,7 +177,10 @@ function decodeRegionScore(reader: Reader, currentSlot: number): RegionScoreView
     latency,
     rtt: Math.round((avgRttUs / 1000 + Number.EPSILON) * 10) / 10,
     observers,
-    stale: observers === 0 || lastUpdatedSlot === 0 || currentSlot - lastUpdatedSlot > STALE_SLOT_THRESHOLD,
+    stale:
+      observers === 0 ||
+      lastUpdatedSlot === 0 ||
+      currentSlot - lastUpdatedSlot > STALE_SLOT_THRESHOLD,
   };
 }
 
@@ -175,8 +197,20 @@ function decodeNetworkHealth(data: Uint8Array): NetworkHealthAccount {
   reader.u8();
   const totalAttestations = reader.u64();
 
-  const regions = Array.from({ length: 7 }, () => decodeRegionScore(reader, lastUpdatedSlot));
-  return { score, reachability, slotLatency, activeObservers, activeRegions, lastUpdatedSlot, lastUpdatedTs, totalAttestations, regions };
+  const regions = Array.from({ length: 7 }, () =>
+    decodeRegionScore(reader, lastUpdatedSlot),
+  );
+  return {
+    score,
+    reachability,
+    slotLatency,
+    activeObservers,
+    activeRegions,
+    lastUpdatedSlot,
+    lastUpdatedTs,
+    totalAttestations,
+    regions,
+  };
 }
 
 function decodeObserver(data: Uint8Array): ObserverView {
@@ -195,7 +229,8 @@ function decodeObserver(data: Uint8Array): ObserverView {
   const tpuReachable = reader.u16();
   const tpuProbed = reader.u16();
   const active = reader.bool();
-  const reach = tpuProbed > 0 ? Math.round((tpuReachable / tpuProbed) * 100) : 0;
+  const reach =
+    tpuProbed > 0 ? Math.round((tpuReachable / tpuProbed) * 100) : 0;
 
   return {
     pubkey,
@@ -243,7 +278,9 @@ async function fetchProgramAccounts(): Promise<RpcAccount[]> {
   const payload = await response.json();
 
   if (!response.ok || payload.error) {
-    throw new Error(payload.error?.message || `RPC request failed with ${response.status}`);
+    throw new Error(
+      payload.error?.message || `RPC request failed with ${response.status}`,
+    );
   }
 
   return payload.result;
@@ -267,9 +304,12 @@ async function getOnchainSnapshot(): Promise<SonarSnapshot> {
 
   for (const account of accounts) {
     const data = Buffer.from(account.account.data[0], "base64");
-    if (matchesDiscriminator(data, networkDiscriminator)) network = decodeNetworkHealth(data);
-    if (matchesDiscriminator(data, observerDiscriminator)) observers.push(decodeObserver(data));
-    if (matchesDiscriminator(data, registryDiscriminator)) registry = decodeRegistry(data);
+    if (matchesDiscriminator(data, networkDiscriminator))
+      network = decodeNetworkHealth(data);
+    if (matchesDiscriminator(data, observerDiscriminator))
+      observers.push(decodeObserver(data));
+    if (matchesDiscriminator(data, registryDiscriminator))
+      registry = decodeRegistry(data);
   }
 
   if (!network || !registry) {
@@ -293,7 +333,10 @@ async function getOnchainSnapshot(): Promise<SonarSnapshot> {
       totalRegions: network.regions.length,
       lastUpdatedSlot: network.lastUpdatedSlot,
       totalAttestations: network.totalAttestations,
-      updatedSeconds: network.lastUpdatedTs > 0 ? Math.max(0, Math.floor(Date.now() / 1000 - network.lastUpdatedTs)) : 0,
+      updatedSeconds:
+        network.lastUpdatedTs > 0
+          ? Math.max(0, Math.floor(Date.now() / 1000 - network.lastUpdatedTs))
+          : 0,
     },
     registry: {
       paused: registry.paused,
@@ -310,7 +353,10 @@ export async function GET() {
     return NextResponse.json(
       {
         source: "placeholder",
-        error: error instanceof Error ? error.message : "On-chain snapshot unavailable",
+        error:
+          error instanceof Error
+            ? error.message
+            : "On-chain snapshot unavailable",
       },
       { status: 503 },
     );

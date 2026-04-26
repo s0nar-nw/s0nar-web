@@ -38,7 +38,10 @@ export function useSonarSnapshot(): SonarState {
           snapshot: {
             ...PLACEHOLDER_SNAPSHOT,
             fetchedAt: Date.now(),
-            error: error instanceof Error ? error.message : "On-chain snapshot unavailable",
+            error:
+              error instanceof Error
+                ? error.message
+                : "On-chain snapshot unavailable",
           },
           loading: false,
         });

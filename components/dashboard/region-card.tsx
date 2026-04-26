@@ -25,7 +25,9 @@ export function RegionCard({
       {/* header */}
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <div className="truncate text-[1rem] font-semibold uppercase tracking-[-0.04em]">{name}</div>
+          <div className="truncate text-[1rem] font-semibold uppercase tracking-[-0.04em]">
+            {name}
+          </div>
           <div className="mt-[0.45rem] text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[rgba(245,255,249,0.36)]">
             {stale ? "Excluded / stale" : `${latency}ms slot latency`}
           </div>
@@ -72,7 +74,13 @@ export function RegionCard({
   }
 
   return (
-    <Panel className={cn("min-h-[9.8rem] p-[1.15rem]", stale && "opacity-50", selected && "border-[rgba(45,225,155,0.24)]")}>
+    <Panel
+      className={cn(
+        "min-h-[9.8rem] p-[1.15rem]",
+        stale && "opacity-50",
+        selected && "border-[rgba(45,225,155,0.24)]",
+      )}
+    >
       {inner}
     </Panel>
   );

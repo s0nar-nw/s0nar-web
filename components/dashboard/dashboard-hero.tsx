@@ -63,7 +63,9 @@ export function DashboardHero({
       </Panel>
 
       {sidebar && (
-        <Panel className="grid min-h-0 gap-[1.15rem] content-start">{sidebar}</Panel>
+        <Panel className="grid min-h-0 gap-[1.15rem] content-start">
+          {sidebar}
+        </Panel>
       )}
     </section>
   );

@@ -15,14 +15,21 @@ import {
 } from "@/components/sonar-ui";
 import { useSonarSnapshot } from "@/lib/sonar-client";
 
-const DEFAULT_HISTORY = [88, 90, 91, 89, 92, 91, 93, 91, 90, 91, 92, 91, 89, 91, 91, 92, 90, 91, 92, 91];
+const DEFAULT_HISTORY = [
+  88, 90, 91, 89, 92, 91, 93, 91, 90, 91, 92, 91, 89, 91, 91, 92, 90, 91, 92,
+  91,
+];
 const MIN_STAKE_SOL = 0.1;
 
 export default function ObserverDetailPage() {
   const { snapshot, loading } = useSonarSnapshot();
   const { pubkey } = useParams<{ pubkey: string }>();
-  const displayKey = decodeURIComponent(typeof pubkey === "string" ? pubkey : "");
-  const observer = snapshot?.observers.find((item) => item.pubkey === displayKey);
+  const displayKey = decodeURIComponent(
+    typeof pubkey === "string" ? pubkey : "",
+  );
+  const observer = snapshot?.observers.find(
+    (item) => item.pubkey === displayKey,
+  );
 
   if (!snapshot || (!observer && loading)) {
     return (
@@ -37,7 +44,11 @@ export default function ObserverDetailPage() {
           eyebrow="Observer detail"
           title="Observer profile"
           description="Per-observer state, latest attestation envelope, and the exact score trend contributing to the regional model."
-          aside={<StatusPill>{loading ? "Fetching on-chain" : "Unavailable"}</StatusPill>}
+          aside={
+            <StatusPill>
+              {loading ? "Fetching on-chain" : "Unavailable"}
+            </StatusPill>
+          }
         />
         <section className="mb-[3.2rem] grid gap-4 min-[901px]:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
           <Panel accent>
@@ -85,14 +96,18 @@ export default function ObserverDetailPage() {
   }
 
   const avgRtt = observer.rtt;
-  const p95Rtt = observer.p95Rtt ?? Math.round((avgRtt * 1.25 + Number.EPSILON) * 10) / 10;
+  const p95Rtt =
+    observer.p95Rtt ?? Math.round((avgRtt * 1.25 + Number.EPSILON) * 10) / 10;
   const slotLatency = observer.slotLatency ?? Math.round(avgRtt * 12);
-  const registeredSlot = observer.registeredAt ?? Math.max(0, observer.slot - 2_442_100);
+  const registeredSlot =
+    observer.registeredAt ?? Math.max(0, observer.slot - 2_442_100);
   const registeredValue = observer.registeredAt
     ? new Date(observer.registeredAt * 1000).toLocaleString()
     : registeredSlot.toLocaleString();
   const history = DEFAULT_HISTORY.map((value, index) =>
-    index === DEFAULT_HISTORY.length - 1 ? observer.score : Math.max(0, Math.min(100, value + observer.score - 91)),
+    index === DEFAULT_HISTORY.length - 1
+      ? observer.score
+      : Math.max(0, Math.min(100, value + observer.score - 91)),
   );
 
   return (
@@ -108,20 +123,30 @@ export default function ObserverDetailPage() {
         eyebrow="Observer detail"
         title="Observer profile"
         description="Per-observer state, latest attestation envelope, and the exact score trend contributing to the regional model."
-        aside={observer.active ? <StatusPill active>{snapshot.source === "onchain" ? "On-chain active" : "Active"}</StatusPill> : <StatusPill>Inactive</StatusPill>}
+        aside={
+          observer.active ? (
+            <StatusPill active>
+              {snapshot.source === "onchain" ? "On-chain active" : "Active"}
+            </StatusPill>
+          ) : (
+            <StatusPill>Inactive</StatusPill>
+          )
+        }
       />
 
       <section className="mb-[3.2rem] grid gap-4 min-[901px]:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
         <Panel accent>
           <div className="flex flex-wrap items-start justify-between gap-5">
             <div>
-              <div className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[#2de19b]">Latest attestation</div>
+              <div className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[#2de19b]">
+                Latest attestation
+              </div>
               <h2 className="mt-[0.9rem] text-[clamp(1.35rem,2.2vw,2rem)] font-semibold uppercase leading-none tracking-[-0.06em]">
                 Health score {observer.score}
               </h2>
               <p className="mt-[0.95rem] max-w-lg text-[0.76rem] leading-[1.6] text-[rgba(245,255,249,0.62)]">
-                Current envelope remains healthy, with strong reachability and latency still
-                below the 400ms threshold.
+                Current envelope remains healthy, with strong reachability and
+                latency still below the 400ms threshold.
               </p>
             </div>
             <StatusPill active>Publishing</StatusPill>
@@ -132,10 +157,26 @@ export default function ObserverDetailPage() {
           </div>
 
           <div className="mt-[1.45rem] grid grid-cols-[repeat(auto-fit,minmax(11rem,1fr))] gap-4">
-            <MetricCard label="Reachability" value={`${observer.reach}/100`} hint="TPU probes that succeeded" />
-            <MetricCard label="Avg RTT" value={`${avgRtt}ms`} hint="Median response latency" />
-            <MetricCard label="Slot latency" value={`${slotLatency}ms`} hint="Below stale threshold" />
-            <MetricCard label="P95 RTT" value={`${p95Rtt}ms`} hint={`Slot ${observer.slot.toLocaleString()}`} />
+            <MetricCard
+              label="Reachability"
+              value={`${observer.reach}/100`}
+              hint="TPU probes that succeeded"
+            />
+            <MetricCard
+              label="Avg RTT"
+              value={`${avgRtt}ms`}
+              hint="Median response latency"
+            />
+            <MetricCard
+              label="Slot latency"
+              value={`${slotLatency}ms`}
+              hint="Below stale threshold"
+            />
+            <MetricCard
+              label="P95 RTT"
+              value={`${p95Rtt}ms`}
+              hint={`Slot ${observer.slot.toLocaleString()}`}
+            />
           </div>
         </Panel>
 
@@ -146,7 +187,12 @@ export default function ObserverDetailPage() {
               items={[
                 { label: "Region", value: observer.region },
                 { label: "PDA seeds", value: '[b"observer", pubkey]' },
-                { label: observer.registeredAt ? "Registered at" : "Registered slot", value: registeredValue },
+                {
+                  label: observer.registeredAt
+                    ? "Registered at"
+                    : "Registered slot",
+                  value: registeredValue,
+                },
                 { label: "Last slot", value: observer.slot.toLocaleString() },
               ]}
             />
@@ -156,7 +202,9 @@ export default function ObserverDetailPage() {
             <SectionTitle>Stake posture</SectionTitle>
             <div className="mt-5 text-[clamp(2rem,4vw,3.5rem)] font-semibold uppercase leading-none tracking-[-0.08em] text-[#2de19b]">
               {observer.stake}
-              <span className="ml-2 text-[0.75rem] tracking-[0.18em] text-[rgba(245,255,249,0.42)]">SOL</span>
+              <span className="ml-2 text-[0.75rem] tracking-[0.18em] text-[rgba(245,255,249,0.42)]">
+                SOL
+              </span>
             </div>
             <div className="mt-3 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[rgba(245,255,249,0.36)]">
               minimum required {MIN_STAKE_SOL} SOL
@@ -164,7 +212,9 @@ export default function ObserverDetailPage() {
             <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/8">
               <div
                 className="h-full rounded-full bg-[#2de19b] shadow-[0_0_1rem_rgba(45,225,155,0.28)]"
-                style={{ width: `${Math.min(100, (observer.stake / MIN_STAKE_SOL) * 100)}%` }}
+                style={{
+                  width: `${Math.min(100, (observer.stake / MIN_STAKE_SOL) * 100)}%`,
+                }}
               />
             </div>
           </Panel>

@@ -5,7 +5,10 @@ interface ScoreMomentumPanelProps {
   history: number[];
 }
 
-export function ScoreMomentumPanel({ score, history }: ScoreMomentumPanelProps) {
+export function ScoreMomentumPanel({
+  score,
+  history,
+}: ScoreMomentumPanelProps) {
   return (
     <Panel accent>
       <SectionTitle>Score momentum</SectionTitle>
@@ -20,7 +23,8 @@ export function ScoreMomentumPanel({ score, history }: ScoreMomentumPanelProps) 
               {score}
             </div>
             <p className="mt-[0.95rem] max-w-136 text-[0.76rem] leading-[1.7] text-[rgba(245,255,249,0.62)]">
-              Strong enough to stay in the healthy band, but still responsive to regional lag.
+              Strong enough to stay in the healthy band, but still responsive to
+              regional lag.
             </p>
           </div>
 

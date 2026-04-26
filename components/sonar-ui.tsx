@@ -1,9 +1,7 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-// ---------------------------------------------------------------------------
 // PageFrame
-// ---------------------------------------------------------------------------
 export function PageFrame({
   children,
   wide = false,
@@ -23,9 +21,7 @@ export function PageFrame({
   );
 }
 
-// ---------------------------------------------------------------------------
 // Eyebrow
-// ---------------------------------------------------------------------------
 export function Eyebrow({
   children,
   accent = false,
@@ -47,9 +43,7 @@ export function Eyebrow({
   );
 }
 
-// ---------------------------------------------------------------------------
 // PageIntro
-// ---------------------------------------------------------------------------
 export function PageIntro({
   eyebrow,
   title,
@@ -79,9 +73,7 @@ export function PageIntro({
   );
 }
 
-// ---------------------------------------------------------------------------
 // SectionTitle
-// ---------------------------------------------------------------------------
 export function SectionTitle({
   children,
   action,
@@ -100,9 +92,7 @@ export function SectionTitle({
   );
 }
 
-// ---------------------------------------------------------------------------
 // Panel
-// ---------------------------------------------------------------------------
 export function Panel({
   children,
   accent = false,
@@ -135,9 +125,7 @@ export function Panel({
   );
 }
 
-// ---------------------------------------------------------------------------
 // MetricCard
-// ---------------------------------------------------------------------------
 export function MetricCard({
   label,
   value,
@@ -176,9 +164,7 @@ export function MetricCard({
   );
 }
 
-// ---------------------------------------------------------------------------
 // StatusPill
-// ---------------------------------------------------------------------------
 export function StatusPill({
   children,
   active = false,
@@ -195,20 +181,19 @@ export function StatusPill({
           : "border-[rgba(255,255,255,0.08)] bg-[rgba(3,12,9,0.8)] text-[rgba(245,255,249,0.36)]",
       )}
     >
-      {active ? <span className="h-[0.38rem] w-[0.38rem] rounded-full bg-[#2de19b] shadow-[0_0_0.9rem_rgba(45,225,155,0.24)]" aria-hidden="true" /> : null}
+      {active ? (
+        <span
+          className="h-[0.38rem] w-[0.38rem] rounded-full bg-[#2de19b] shadow-[0_0_0.9rem_rgba(45,225,155,0.24)]"
+          aria-hidden="true"
+        />
+      ) : null}
       {children}
     </span>
   );
 }
 
-// ---------------------------------------------------------------------------
 // Skeleton
-// ---------------------------------------------------------------------------
-export function Skeleton({
-  className,
-}: {
-  className?: string;
-}) {
+export function Skeleton({ className }: { className?: string }) {
   return (
     <div
       className={cn(
@@ -228,14 +213,15 @@ export function PageIntroSkeleton({ title = "Loading" }: { title?: string }) {
         <Skeleton className="mt-4 h-[0.9rem] w-full max-w-[42rem]" />
         <Skeleton className="mt-3 h-[0.9rem] w-full max-w-[31rem]" />
       </div>
-      <Skeleton className="h-[2rem] w-[11rem] rounded-[12px]" aria-label={title} />
+      <Skeleton
+        className="h-[2rem] w-[11rem] rounded-[12px]"
+        aria-label={title}
+      />
     </section>
   );
 }
 
-// ---------------------------------------------------------------------------
 // KeyValueList
-// ---------------------------------------------------------------------------
 export function KeyValueList({
   items,
 }: {
@@ -256,9 +242,7 @@ export function KeyValueList({
   );
 }
 
-// ---------------------------------------------------------------------------
 // Bars
-// ---------------------------------------------------------------------------
 export function Bars({
   values,
   accentIndex,
@@ -284,9 +268,7 @@ export function Bars({
   );
 }
 
-// ---------------------------------------------------------------------------
 // ActionLink
-// ---------------------------------------------------------------------------
 export function ActionLink({
   href,
   children,

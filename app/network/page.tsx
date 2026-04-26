@@ -36,7 +36,11 @@ export default function NetworkPage() {
           eyebrow="Oracle / Devnet"
           title="Network overview"
           description="One surface for current health, regional divergence, and the on-chain state every downstream consumer reads."
-          aside={<StatusPill>{loading ? "Fetching on-chain" : "Unavailable"}</StatusPill>}
+          aside={
+            <StatusPill>
+              {loading ? "Fetching on-chain" : "Unavailable"}
+            </StatusPill>
+          }
         />
         <section className="mb-12">
           <Panel accent className="p-[1.6rem]">
@@ -52,7 +56,10 @@ export default function NetworkPage() {
                 </div>
                 <div className="grid grid-cols-[repeat(auto-fit,minmax(10.5rem,1fr))] gap-3 border-t border-[rgba(255,255,255,0.08)] pt-5">
                   {Array.from({ length: 3 }).map((_, index) => (
-                    <Skeleton key={index} className="h-[5.2rem] rounded-[12px]" />
+                    <Skeleton
+                      key={index}
+                      className="h-[5.2rem] rounded-[12px]"
+                    />
                   ))}
                 </div>
               </div>
@@ -75,12 +82,27 @@ export default function NetworkPage() {
 
   const { network, registry, regions, history, source } = snapshot;
   const updatedSeconds =
-    networkUpdatedSeconds + (now > snapshotFetchedAt ? Math.floor((now - snapshotFetchedAt) / 1000) : 0);
+    networkUpdatedSeconds +
+    (now > snapshotFetchedAt
+      ? Math.floor((now - snapshotFetchedAt) / 1000)
+      : 0);
   const activeRegions = regions.filter((region) => !region.stale);
   const networkMetrics = [
-    { label: "Reachability", value: `${network.reachability}%`, hint: "Median active observers" },
-    { label: "Slot latency", value: `${network.slotLatency}ms`, hint: "400ms stale ceiling" },
-    { label: "Quorum", value: `${network.activeObservers} / ${network.totalObservers}`, hint: "Active observers" },
+    {
+      label: "Reachability",
+      value: `${network.reachability}%`,
+      hint: "Median active observers",
+    },
+    {
+      label: "Slot latency",
+      value: `${network.slotLatency}ms`,
+      hint: "400ms stale ceiling",
+    },
+    {
+      label: "Quorum",
+      value: `${network.activeObservers} / ${network.totalObservers}`,
+      hint: "Active observers",
+    },
   ] as const;
 
   return (
@@ -89,7 +111,13 @@ export default function NetworkPage() {
         eyebrow="Oracle / Devnet"
         title="Network overview"
         description="One surface for current health, regional divergence, and the on-chain state every downstream consumer reads."
-        aside={<StatusPill active={source === "onchain"}>{source === "onchain" ? `Updated ${updatedSeconds}s ago` : "Placeholder fallback"}</StatusPill>}
+        aside={
+          <StatusPill active={source === "onchain"}>
+            {source === "onchain"
+              ? `Updated ${updatedSeconds}s ago`
+              : "Placeholder fallback"}
+          </StatusPill>
+        }
       />
 
       <section className="mb-12">
@@ -116,15 +144,21 @@ export default function NetworkPage() {
                     Global health
                   </h2>
                   <p className="mt-[0.95rem] max-w-150 text-[0.82rem] leading-[1.65] text-[rgba(245,255,249,0.62)]">
-                    Active regions are inside the healthy band, with stale buckets excluded from aggregation.
+                    Active regions are inside the healthy band, with stale
+                    buckets excluded from aggregation.
                   </p>
                 </div>
-                <StatusPill active>{activeRegions.length} active regions</StatusPill>
+                <StatusPill active>
+                  {activeRegions.length} active regions
+                </StatusPill>
               </div>
 
               <div className="grid grid-cols-[repeat(auto-fit,minmax(10.5rem,1fr))] gap-3 border-t border-[rgba(255,255,255,0.08)] pt-5">
                 {networkMetrics.map(({ label, value, hint }) => (
-                  <div key={label} className="min-h-[5.2rem] rounded-[12px] border border-[rgba(255,255,255,0.06)] bg-black/25 p-4">
+                  <div
+                    key={label}
+                    className="min-h-[5.2rem] rounded-[12px] border border-[rgba(255,255,255,0.06)] bg-black/25 p-4"
+                  >
                     <span className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[rgba(245,255,249,0.36)]">
                       {label}
                     </span>

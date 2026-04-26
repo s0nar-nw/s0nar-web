@@ -12,8 +12,8 @@ export function CtaSection() {
               Start with the live network view.
             </h2>
             <p className="mt-4 text-[14px] leading-7 text-white/60">
-              The fastest way to understand the product is to inspect the current score,
-              regional split, and oracle state directly.
+              The fastest way to understand the product is to inspect the
+              current score, regional split, and oracle state directly.
             </p>
           </div>
 

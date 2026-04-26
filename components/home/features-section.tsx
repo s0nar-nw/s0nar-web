@@ -25,8 +25,9 @@ export function FeaturesSection() {
             A clean answer to a messy network question.
           </h2>
           <p className="mt-4 max-w-[46ch] text-[14px] leading-7 text-white/60">
-            Most teams only see their own provider, their own probes, or their own
-            dashboards. s0nar publishes a shared, inspectable health view instead.
+            Most teams only see their own provider, their own probes, or their
+            own dashboards. s0nar publishes a shared, inspectable health view
+            instead.
           </p>
         </div>
 
@@ -39,7 +40,9 @@ export function FeaturesSection() {
               <h3 className="text-[16px] font-semibold uppercase tracking-[-0.04em] text-white">
                 {feature.title}
               </h3>
-              <p className="mt-3 text-[13px] leading-6 text-white/58">{feature.copy}</p>
+              <p className="mt-3 text-[13px] leading-6 text-white/58">
+                {feature.copy}
+              </p>
             </div>
           ))}
         </div>

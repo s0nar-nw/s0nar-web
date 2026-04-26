@@ -15,11 +15,16 @@ export function HowItWorksSection() {
           <SectionKicker>How it works</SectionKicker>
           <div className="mt-6 grid gap-4 sm:grid-cols-3">
             {STEPS.map((step, index) => (
-              <div key={step} className="rounded-[18px] border border-white/8 bg-[rgba(0,0,0,0.78)] p-4">
+              <div
+                key={step}
+                className="rounded-[18px] border border-white/8 bg-[rgba(0,0,0,0.78)] p-4"
+              >
                 <div className="text-[22px] font-semibold leading-none tracking-[-0.08em] text-[#2DE19B]">
                   0{index + 1}
                 </div>
-                <p className="mt-3 text-[13px] leading-6 text-white/60">{step}</p>
+                <p className="mt-3 text-[13px] leading-6 text-white/60">
+                  {step}
+                </p>
               </div>
             ))}
           </div>

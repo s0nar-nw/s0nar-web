@@ -46,13 +46,69 @@ const GLOBE_CONFIG = {
 } as const;
 
 const GLOBE_DATA = [
-  { order: 1, startLat: REGION_POINTS.US.lat, startLng: REGION_POINTS.US.lng, endLat: REGION_POINTS.Asia.lat, endLng: REGION_POINTS.Asia.lng, arcAlt: 0.28, color: GLOBE_PRIMARY },
-  { order: 2, startLat: REGION_POINTS.EU.lat, startLng: REGION_POINTS.EU.lng, endLat: REGION_POINTS.Asia.lat, endLng: REGION_POINTS.Asia.lng, arcAlt: 0.22, color: GLOBE_PRIMARY },
-  { order: 3, startLat: REGION_POINTS.EU.lat, startLng: REGION_POINTS.EU.lng, endLat: REGION_POINTS.Oceania.lat, endLng: REGION_POINTS.Oceania.lng, arcAlt: 0.35, color: GLOBE_PRIMARY },
-  { order: 4, startLat: REGION_POINTS.US.lat, startLng: REGION_POINTS.US.lng, endLat: REGION_POINTS.SouthAmerica.lat, endLng: REGION_POINTS.SouthAmerica.lng, arcAlt: 0.26, color: GLOBE_PRIMARY },
-  { order: 5, startLat: REGION_POINTS.Africa.lat, startLng: REGION_POINTS.Africa.lng, endLat: REGION_POINTS.Other.lat, endLng: REGION_POINTS.Other.lng, arcAlt: 0.2, color: GLOBE_PRIMARY },
-  { order: 6, startLat: REGION_POINTS.Asia.lat, startLng: REGION_POINTS.Asia.lng, endLat: REGION_POINTS.Africa.lat, endLng: REGION_POINTS.Africa.lng, arcAlt: 0.24, color: GLOBE_PRIMARY },
-  { order: 7, startLat: REGION_POINTS.Oceania.lat, startLng: REGION_POINTS.Oceania.lng, endLat: REGION_POINTS.Other.lat, endLng: REGION_POINTS.Other.lng, arcAlt: 0.3, color: GLOBE_PRIMARY },
+  {
+    order: 1,
+    startLat: REGION_POINTS.US.lat,
+    startLng: REGION_POINTS.US.lng,
+    endLat: REGION_POINTS.Asia.lat,
+    endLng: REGION_POINTS.Asia.lng,
+    arcAlt: 0.28,
+    color: GLOBE_PRIMARY,
+  },
+  {
+    order: 2,
+    startLat: REGION_POINTS.EU.lat,
+    startLng: REGION_POINTS.EU.lng,
+    endLat: REGION_POINTS.Asia.lat,
+    endLng: REGION_POINTS.Asia.lng,
+    arcAlt: 0.22,
+    color: GLOBE_PRIMARY,
+  },
+  {
+    order: 3,
+    startLat: REGION_POINTS.EU.lat,
+    startLng: REGION_POINTS.EU.lng,
+    endLat: REGION_POINTS.Oceania.lat,
+    endLng: REGION_POINTS.Oceania.lng,
+    arcAlt: 0.35,
+    color: GLOBE_PRIMARY,
+  },
+  {
+    order: 4,
+    startLat: REGION_POINTS.US.lat,
+    startLng: REGION_POINTS.US.lng,
+    endLat: REGION_POINTS.SouthAmerica.lat,
+    endLng: REGION_POINTS.SouthAmerica.lng,
+    arcAlt: 0.26,
+    color: GLOBE_PRIMARY,
+  },
+  {
+    order: 5,
+    startLat: REGION_POINTS.Africa.lat,
+    startLng: REGION_POINTS.Africa.lng,
+    endLat: REGION_POINTS.Other.lat,
+    endLng: REGION_POINTS.Other.lng,
+    arcAlt: 0.2,
+    color: GLOBE_PRIMARY,
+  },
+  {
+    order: 6,
+    startLat: REGION_POINTS.Asia.lat,
+    startLng: REGION_POINTS.Asia.lng,
+    endLat: REGION_POINTS.Africa.lat,
+    endLng: REGION_POINTS.Africa.lng,
+    arcAlt: 0.24,
+    color: GLOBE_PRIMARY,
+  },
+  {
+    order: 7,
+    startLat: REGION_POINTS.Oceania.lat,
+    startLng: REGION_POINTS.Oceania.lng,
+    endLat: REGION_POINTS.Other.lat,
+    endLng: REGION_POINTS.Other.lng,
+    arcAlt: 0.3,
+    color: GLOBE_PRIMARY,
+  },
 ] as const;
 
 export function HeroSection() {
@@ -70,8 +126,8 @@ export function HeroSection() {
           </h1>
 
           <p className="max-w-[42ch] text-sm leading-7 text-white/68">
-            Distributed observers publish a compact health surface for operators,
-            dashboards, and Solana programs.
+            Distributed observers publish a compact health surface for
+            operators, dashboards, and Solana programs.
           </p>
 
           <div className="flex flex-wrap gap-4">
