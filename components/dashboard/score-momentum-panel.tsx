@@ -32,7 +32,7 @@ export function ScoreMomentumPanel({
             {[
               { label: "Floor", value: "82" },
               { label: "Ceiling", value: "94" },
-              { label: "Window size", value: "20" },
+              { label: "Points", value: history.length.toString() },
             ].map(({ label, value }) => (
               <div key={label}>
                 <span className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[rgba(245,255,249,0.36)]">
@@ -50,13 +50,13 @@ export function ScoreMomentumPanel({
 
         <div className="border-l border-[rgba(255,255,255,0.08)] pl-[1.4rem] max-[900px]:border-l-0 max-[900px]:border-t max-[900px]:border-t-[rgba(255,255,255,0.08)] max-[900px]:pl-0 max-[900px]:pt-[1.4rem]">
           <div className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[rgba(245,255,249,0.36)]">
-            Last 20 windows
+            Recent score events
           </div>
           <div className="mt-5">
             <Bars values={history} accentIndex={history.length - 1} />
           </div>
           <div className="mt-[0.85rem] flex justify-between text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[rgba(245,255,249,0.36)]">
-            <span>200s ago</span>
+            <span>Earlier</span>
             <span>Now</span>
           </div>
         </div>

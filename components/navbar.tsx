@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useSonarSnapshot } from "@/lib/use-sonar-snapshot";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
@@ -15,21 +16,10 @@ const NAV_LINKS = [
 
 export function Navbar() {
   const pathname = usePathname();
+  const { snapshot, loading } = useSonarSnapshot();
   const isHome = pathname === "/";
-  const [slot, setSlot] = useState(287442108);
-  const [score, setScore] = useState(87);
   const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const interval = window.setInterval(() => {
-      setSlot((value) => value + Math.floor(Math.random() * 3 + 1));
-      setScore((value) => {
-        const delta = Math.random() > 0.65 ? 1 : 0;
-        return Math.min(99, Math.max(84, value + delta));
-      });
-    }, 1200);
-    return () => window.clearInterval(interval);
-  }, []);
+  const status = snapshot ? "live" : loading ? "loading" : "offline";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -100,21 +90,18 @@ export function Navbar() {
           <div className="inline-flex min-h-[2.2rem] items-center gap-[0.45rem] rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[rgba(1,6,4,0.96)] px-3 text-[0.62rem] uppercase tracking-[0.16em] text-[rgba(245,255,249,0.62)]">
             <span>score</span>
             <strong className="text-[0.72rem] tracking-[0.04em] text-[rgba(245,255,249,1)]">
-              {score}
+              {snapshot ? snapshot.network.score : "—"}
             </strong>
           </div>
           <div className="inline-flex min-h-[2.2rem] items-center gap-[0.45rem] rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[rgba(1,6,4,0.96)] px-3 text-[0.62rem] uppercase tracking-[0.16em] text-[rgba(245,255,249,0.62)]">
             <span>slot</span>
             <strong className="text-[0.69rem] tracking-[0.04em] text-[rgba(245,255,249,1)]">
-              {slot.toLocaleString()}
+              {snapshot ? snapshot.network.lastUpdatedSlot.toLocaleString() : "—"}
             </strong>
           </div>
           <div className="inline-flex min-h-[2.2rem] items-center gap-[0.45rem] rounded-[12px] border border-[rgba(45,225,155,0.24)] bg-[rgba(4,16,12,0.84)] px-3 text-[0.62rem] uppercase tracking-[0.16em] text-[#2de19b]">
-            <span
-              className="h-[0.38rem] w-[0.38rem] rounded-full bg-[#2de19b] shadow-[0_0_0.9rem_rgba(45,225,155,0.24)]"
-              aria-hidden="true"
-            />
-            live
+            <span className="h-[0.38rem] w-[0.38rem] rounded-full bg-[#2de19b] shadow-[0_0_0.9rem_rgba(45,225,155,0.24)]" aria-hidden="true" />
+            {status}
           </div>
         </div>
       </div>

@@ -11,7 +11,16 @@ import {
 } from "@/components/sonar-ui";
 import { ScoreMomentumPanel } from "@/components/dashboard/score-momentum-panel";
 import { NetworkSidebar } from "@/components/dashboard/network-sidebar";
-import { useSonarSnapshot } from "@/lib/sonar-client";
+import { useSonarSnapshot } from "@/lib/use-sonar-snapshot";
+
+function shortKey(value: string) {
+  return `${value.slice(0, 4)}...${value.slice(-4)}`;
+}
+
+function formatTime(timestamp?: number) {
+  if (!timestamp) return "—";
+  return new Date(timestamp * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+}
 
 export default function NetworkPage() {
   const { snapshot, loading } = useSonarSnapshot();
@@ -36,11 +45,7 @@ export default function NetworkPage() {
           eyebrow="Oracle / Devnet"
           title="Network overview"
           description="One surface for current health, regional divergence, and the on-chain state every downstream consumer reads."
-          aside={
-            <StatusPill>
-              {loading ? "Fetching on-chain" : "Unavailable"}
-            </StatusPill>
-          }
+          aside={<StatusPill>{loading ? "Fetching on-chain" : "Unavailable"}</StatusPill>}
         />
         <section className="mb-12">
           <Panel accent className="p-[1.6rem]">
@@ -56,10 +61,7 @@ export default function NetworkPage() {
                 </div>
                 <div className="grid grid-cols-[repeat(auto-fit,minmax(10.5rem,1fr))] gap-3 border-t border-[rgba(255,255,255,0.08)] pt-5">
                   {Array.from({ length: 3 }).map((_, index) => (
-                    <Skeleton
-                      key={index}
-                      className="h-[5.2rem] rounded-[12px]"
-                    />
+                    <Skeleton key={index} className="h-[5.2rem] rounded-[12px]" />
                   ))}
                 </div>
               </div>
@@ -80,29 +82,14 @@ export default function NetworkPage() {
     );
   }
 
-  const { network, registry, regions, history, source } = snapshot;
+  const { network, registry, regions, history, attestationHistory } = snapshot;
   const updatedSeconds =
-    networkUpdatedSeconds +
-    (now > snapshotFetchedAt
-      ? Math.floor((now - snapshotFetchedAt) / 1000)
-      : 0);
+    networkUpdatedSeconds + (now > snapshotFetchedAt ? Math.floor((now - snapshotFetchedAt) / 1000) : 0);
   const activeRegions = regions.filter((region) => !region.stale);
   const networkMetrics = [
-    {
-      label: "Reachability",
-      value: `${network.reachability}%`,
-      hint: "Median active observers",
-    },
-    {
-      label: "Slot latency",
-      value: `${network.slotLatency}ms`,
-      hint: "400ms stale ceiling",
-    },
-    {
-      label: "Quorum",
-      value: `${network.activeObservers} / ${network.totalObservers}`,
-      hint: "Active observers",
-    },
+    { label: "Reachability", value: `${network.reachability}%`, hint: "Median active observers" },
+    { label: "Slot latency", value: `${network.slotLatency}ms`, hint: "400ms stale ceiling" },
+    { label: "Quorum", value: `${network.activeObservers} / ${network.totalObservers}`, hint: "Active observers" },
   ] as const;
 
   return (
@@ -111,13 +98,7 @@ export default function NetworkPage() {
         eyebrow="Oracle / Devnet"
         title="Network overview"
         description="One surface for current health, regional divergence, and the on-chain state every downstream consumer reads."
-        aside={
-          <StatusPill active={source === "onchain"}>
-            {source === "onchain"
-              ? `Updated ${updatedSeconds}s ago`
-              : "Placeholder fallback"}
-          </StatusPill>
-        }
+        aside={<StatusPill active>Updated {updatedSeconds}s ago</StatusPill>}
       />
 
       <section className="mb-12">
@@ -144,21 +125,15 @@ export default function NetworkPage() {
                     Global health
                   </h2>
                   <p className="mt-[0.95rem] max-w-150 text-[0.82rem] leading-[1.65] text-[rgba(245,255,249,0.62)]">
-                    Active regions are inside the healthy band, with stale
-                    buckets excluded from aggregation.
+                    Active regions are inside the healthy band, with stale buckets excluded from aggregation.
                   </p>
                 </div>
-                <StatusPill active>
-                  {activeRegions.length} active regions
-                </StatusPill>
+                <StatusPill active>{activeRegions.length} active regions</StatusPill>
               </div>
 
               <div className="grid grid-cols-[repeat(auto-fit,minmax(10.5rem,1fr))] gap-3 border-t border-[rgba(255,255,255,0.08)] pt-5">
                 {networkMetrics.map(({ label, value, hint }) => (
-                  <div
-                    key={label}
-                    className="min-h-[5.2rem] rounded-[12px] border border-[rgba(255,255,255,0.06)] bg-black/25 p-4"
-                  >
+                  <div key={label} className="min-h-[5.2rem] rounded-[12px] border border-[rgba(255,255,255,0.06)] bg-black/25 p-4">
                     <span className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[rgba(245,255,249,0.36)]">
                       {label}
                     </span>
@@ -210,6 +185,64 @@ export default function NetworkPage() {
             minStakeSol={registry.minStakeSol}
             paused={registry.paused}
           />
+        </div>
+      </section>
+
+      <section className="mt-[3.2rem]">
+        <SectionTitle
+          action={
+            <span className="whitespace-nowrap text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[rgba(245,255,249,0.36)]">
+              {attestationHistory.length} latest events
+            </span>
+          }
+        >
+          Attestation history
+        </SectionTitle>
+        <div className="relative overflow-auto rounded-[16px] border border-[rgba(255,255,255,0.06)] bg-[linear-gradient(180deg,rgba(4,14,10,0.9),rgba(0,0,0,0.94))]">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr>
+                {["Slot", "Observer", "Region", "Score", "Reach", "Latency", "Time"].map((heading) => (
+                  <th
+                    key={heading}
+                    className="border-b border-[rgba(255,255,255,0.08)] px-[0.82rem] py-[0.74rem] text-left align-middle text-[0.58rem] font-bold uppercase tracking-[0.22em] text-[rgba(245,255,249,0.36)]"
+                  >
+                    {heading}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {attestationHistory.map((item) => (
+                <tr key={item.signature} className="hover:bg-black/80">
+                  <td className="border-b border-[rgba(255,255,255,0.08)] px-[0.82rem] py-[0.74rem] font-mono text-[0.72rem] text-[rgba(245,255,249,0.62)]">
+                    {item.slot.toLocaleString()}
+                  </td>
+                  <td className="border-b border-[rgba(255,255,255,0.08)] px-[0.82rem] py-[0.74rem] font-mono text-[0.72rem] text-[rgba(245,255,249,1)]">
+                    {shortKey(item.observer)}
+                  </td>
+                  <td className="border-b border-[rgba(255,255,255,0.08)] px-[0.82rem] py-[0.74rem] text-[0.72rem] text-[rgba(245,255,249,0.62)]">
+                    {item.region}
+                  </td>
+                  <td className="border-b border-[rgba(255,255,255,0.08)] px-[0.82rem] py-[0.74rem] font-mono text-[0.72rem] text-[#2de19b]">
+                    {item.score}
+                  </td>
+                  <td className="border-b border-[rgba(255,255,255,0.08)] px-[0.82rem] py-[0.74rem] font-mono text-[0.72rem] text-[rgba(245,255,249,0.62)]">
+                    {item.reachability}%
+                  </td>
+                  <td className="border-b border-[rgba(255,255,255,0.08)] px-[0.82rem] py-[0.74rem] font-mono text-[0.72rem] text-[rgba(245,255,249,0.62)]">
+                    {item.slotLatency}ms
+                  </td>
+                  <td className="border-b border-[rgba(255,255,255,0.08)] px-[0.82rem] py-[0.74rem] font-mono text-[0.72rem] text-[rgba(245,255,249,0.62)]">
+                    {formatTime(item.timestamp)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {attestationHistory.length === 0 ? (
+            <div className="p-4 text-[0.72rem] text-[rgba(245,255,249,0.62)]">No recent attestation events found.</div>
+          ) : null}
         </div>
       </section>
     </PageFrame>
