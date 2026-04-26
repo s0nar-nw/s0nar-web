@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-// import { Analytics } from "@vercel/analytics/next";
+import { Geist, Geist_Mono, JetBrains_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { AppShell } from "@/components/app-shell";
 import { Geist } from "next/font/google";
