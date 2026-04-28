@@ -122,7 +122,8 @@ export function HeroSection() {
       >
         <div className="relative z-10 flex max-w-112 flex-col items-start gap-6">
           <h1 className="max-w-[10ch] text-4xl font-semibold uppercase leading-none text-white md:text-6xl xl:text-7xl">
-            Network health, on-chain<span className="text-primary">.</span>
+            Network <span className="text-[#2de19b]">Health</span>, <br />
+            on-chain<span className="text-primary">.</span>
           </h1>
 
           <p className="max-w-[42ch] text-sm leading-7 text-white/68">
