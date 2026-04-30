@@ -1,5 +1,16 @@
 import { createHash } from "crypto";
+import { Connection, PublicKey } from "@solana/web3.js";
 import { NextResponse } from "next/server";
+import {
+  createS0narClient,
+  lamportsToSol,
+  latencyScore,
+  type NetworkHealth,
+  type Observer,
+  type Region,
+  type RegionScore,
+  type Registry,
+} from "s0nar-sdk";
 import { idl } from "@/lib/s0nar-idl";
 import { type AttestationHistoryItem, type ObserverView, type RegionScoreView, type SonarSnapshot } from "@/lib/sonar-static";
 
@@ -7,23 +18,29 @@ export const dynamic = "force-dynamic";
 
 const RPC_URL = process.env.SOLANA_RPC_URL || process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com";
 const PROGRAM_ID = idl.address;
-const LAMPORTS_PER_SOL = 1_000_000_000;
 const STALE_SLOT_THRESHOLD = 150;
 const REGION_NAMES = ["Asia", "US", "EU", "South America", "Africa", "Oceania", "Other"] as const;
-const REGION_IDS = ["asia", "us", "eu", "sa", "africa", "oc", "other"] as const;
 const BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 const HISTORY_LIMIT = 10;
 const INTERNAL_HISTORY_LIMIT = 60;
 const SIGNATURE_SCAN_LIMIT = 80;
-const TX_BATCH_SIZE = 12;
+const TX_SCAN_LIMIT = 32;
 const HISTORY_TIMEOUT_MS = 8_000;
-
-type RpcAccount = {
-  pubkey: string;
-  account: {
-    data: [string, string];
-  };
+const SNAPSHOT_TTL_MS = 10_000;
+const REGION_IDS_BY_NAME: Record<string, RegionScoreView["id"]> = {
+  Asia: "asia",
+  US: "us",
+  EU: "eu",
+  "South America": "sa",
+  Africa: "africa",
+  Oceania: "oc",
+  Other: "other",
 };
+const connection = new Connection(RPC_URL, "confirmed");
+const client = createS0narClient({
+  connection,
+  programId: new PublicKey(PROGRAM_ID),
+});
 
 type RpcSignature = {
   signature: string;
@@ -38,25 +55,9 @@ type RpcTransaction = {
   };
 };
 
-type NetworkHealthAccount = {
-  score: number;
-  reachability: number;
-  slotLatency: number;
-  activeObservers: number;
-  activeRegions: number;
-  lastUpdatedSlot: number;
-  lastUpdatedTs: number;
-  totalAttestations: number;
-  regions: RegionScoreView[];
-};
-
-type RegistryAccount = {
-  minStakeSol: number;
-  observerCount: number;
-  activeCount: number;
-  maxObservers: number;
-  paused: boolean;
-};
+let cachedSnapshot: SonarSnapshot | null = null;
+let cachedSnapshotAt = 0;
+let snapshotPromise: Promise<SonarSnapshot> | null = null;
 
 class Reader {
   private offset = 8;
@@ -111,10 +112,6 @@ class Reader {
   }
 }
 
-function discriminator(name: string) {
-  return createHash("sha256").update(`account:${name}`).digest().subarray(0, 8);
-}
-
 function eventDiscriminator(name: string) {
   return createHash("sha256").update(`event:${name}`).digest().subarray(0, 8);
 }
@@ -151,12 +148,58 @@ function encodeBase58(bytes: Uint8Array) {
 }
 
 function calculateScore(reachability: number, slotLatency: number) {
-  const latencyScore = Math.max(0, ((400 - slotLatency) / 400) * 100);
-  return Math.round(reachability * 0.7 + latencyScore * 0.3);
+  return Math.round(reachability * 0.7 + latencyScore(slotLatency) * 0.3);
 }
 
 function regionName(region: number) {
   return REGION_NAMES[region] ?? "Other";
+}
+
+function sdkRegionName(region: Region) {
+  if (region === "SouthAmerica") return "South America";
+  return region;
+}
+
+function mapRegionScore(region: RegionScore, currentSlot: bigint): RegionScoreView {
+  const name = sdkRegionName(region.region);
+  return {
+    id: REGION_IDS_BY_NAME[name] ?? "other",
+    name,
+    score: region.healthScore,
+    reachability: region.reachabilityPct,
+    latency: region.slotLatencyMs,
+    rtt: Math.round((region.avgRttUs / 1000 + Number.EPSILON) * 10) / 10,
+    observers: region.observerCount,
+    stale:
+      region.observerCount === 0 ||
+      region.lastUpdatedSlot === BigInt(0) ||
+      currentSlot - region.lastUpdatedSlot > BigInt(STALE_SLOT_THRESHOLD),
+  };
+}
+
+function mapObserver(observer: Observer): ObserverView {
+  const latest = observer.latestAttestation;
+  const tpuProbed = latest.tpuProbed;
+  const tpuReachable = latest.tpuReachable;
+  const reach = tpuProbed > 0 ? Math.round((tpuReachable / tpuProbed) * 100) : 0;
+  const slotLatency = latest.slotLatencyMs;
+
+  return {
+    pubkey: observer.authority.toBase58(),
+    region: sdkRegionName(observer.region),
+    active: observer.isActive,
+    stake: lamportsToSol(observer.stakeLamports),
+    slot: Number(latest.slot || observer.lastAttestationSlot),
+    reach,
+    rtt: Math.round((latest.avgRttUs / 1000 + Number.EPSILON) * 10) / 10,
+    score: observer.isActive ? calculateScore(reach, slotLatency) : 0,
+    p95Rtt: Math.round((latest.p95RttUs / 1000 + Number.EPSILON) * 10) / 10,
+    slotLatency,
+    tpuReachable,
+    tpuProbed,
+    registeredAt: Number(observer.registeredAt),
+    attestationCount: Number(observer.attestationCount),
+  };
 }
 
 async function rpcRequest<T>(method: string, params: unknown[], id = method, timeoutMs = 8_000): Promise<T> {
@@ -176,29 +219,6 @@ async function rpcRequest<T>(method: string, params: unknown[], id = method, tim
   return payload.result;
 }
 
-async function rpcBatchRequest<T>(requests: Array<{ method: string; params: unknown[]; id: string }>, timeoutMs = 8_000): Promise<Array<T | null>> {
-  const response = await fetch(RPC_URL, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(
-      requests.map((request) => ({
-        jsonrpc: "2.0",
-        id: request.id,
-        method: request.method,
-        params: request.params,
-      })),
-    ),
-    cache: "no-store",
-    signal: AbortSignal.timeout(timeoutMs),
-  });
-  const payload = await response.json();
-
-  if (!response.ok || !Array.isArray(payload)) return requests.map(() => null);
-
-  const byId = new Map(payload.map((item) => [item.id, item.error ? null : item.result]));
-  return requests.map((request) => (byId.get(request.id) as T | null) ?? null);
-}
-
 function timeout<T>(promise: Promise<T>, fallback: T, ms: number): Promise<T> {
   return new Promise((resolve) => {
     const timer = setTimeout(() => resolve(fallback), ms);
@@ -207,100 +227,6 @@ function timeout<T>(promise: Promise<T>, fallback: T, ms: number): Promise<T> {
       .catch(() => resolve(fallback))
       .finally(() => clearTimeout(timer));
   });
-}
-
-function decodeRegionScore(reader: Reader, currentSlot: number): RegionScoreView {
-  const region = reader.u8();
-  const observers = reader.u16();
-  const score = reader.u8();
-  const reachability = reader.u8();
-  const avgRttUs = reader.u32();
-  const latency = reader.u32();
-  const lastUpdatedSlot = reader.u64();
-  reader.u32();
-  reader.u32();
-  reader.u64();
-  reader.u64();
-
-  return {
-    id: REGION_IDS[region] ?? "other",
-    name: regionName(region),
-    score,
-    reachability,
-    latency,
-    rtt: Math.round((avgRttUs / 1000 + Number.EPSILON) * 10) / 10,
-    observers,
-    stale: observers === 0 || lastUpdatedSlot === 0 || currentSlot - lastUpdatedSlot > STALE_SLOT_THRESHOLD,
-  };
-}
-
-function decodeNetworkHealth(data: Uint8Array): NetworkHealthAccount {
-  const reader = new Reader(data);
-  const score = reader.u8();
-  const reachability = reader.u8();
-  const slotLatency = reader.u32();
-  const activeObservers = reader.u16();
-  const activeRegions = reader.u16();
-  const lastUpdatedSlot = reader.u64();
-  const lastUpdatedTs = reader.i64();
-  reader.u8();
-  reader.u8();
-  const totalAttestations = reader.u64();
-
-  const regions = Array.from({ length: 7 }, () => decodeRegionScore(reader, lastUpdatedSlot));
-  return { score, reachability, slotLatency, activeObservers, activeRegions, lastUpdatedSlot, lastUpdatedTs, totalAttestations, regions };
-}
-
-function decodeObserver(data: Uint8Array): ObserverView {
-  const reader = new Reader(data);
-  const pubkey = reader.pubkey();
-  const region = reader.u8();
-  const stake = reader.u64() / LAMPORTS_PER_SOL;
-  const registeredAt = reader.i64();
-  const lastAttestationSlot = reader.u64();
-  const attestationCount = reader.u64();
-  const slot = reader.u64();
-  reader.i64();
-  const avgRttUs = reader.u32();
-  const p95RttUs = reader.u32();
-  const slotLatency = reader.u32();
-  const tpuReachable = reader.u16();
-  const tpuProbed = reader.u16();
-  const active = reader.bool();
-  const reach = tpuProbed > 0 ? Math.round((tpuReachable / tpuProbed) * 100) : 0;
-
-  return {
-    pubkey,
-    region: regionName(region),
-    active,
-    stake,
-    slot: slot || lastAttestationSlot,
-    reach,
-    rtt: Math.round((avgRttUs / 1000 + Number.EPSILON) * 10) / 10,
-    score: active ? calculateScore(reach, slotLatency) : 0,
-    p95Rtt: Math.round((p95RttUs / 1000 + Number.EPSILON) * 10) / 10,
-    slotLatency,
-    tpuReachable,
-    tpuProbed,
-    registeredAt,
-    attestationCount,
-  };
-}
-
-function decodeRegistry(data: Uint8Array): RegistryAccount {
-  const reader = new Reader(data);
-  reader.pubkey();
-  reader.optionPubkey();
-  const minStakeSol = reader.u64() / LAMPORTS_PER_SOL;
-  const observerCount = reader.u16();
-  const activeCount = reader.u16();
-  const maxObservers = reader.u16();
-  const paused = reader.bool();
-  return { minStakeSol, observerCount, activeCount, maxObservers, paused };
-}
-
-async function fetchProgramAccounts(): Promise<RpcAccount[]> {
-  return rpcRequest<RpcAccount[]>("getProgramAccounts", [PROGRAM_ID, { encoding: "base64" }], "s0nar");
 }
 
 function decodeAttestationEvent(data: Uint8Array, signature: string, timestamp?: number): AttestationHistoryItem | null {
@@ -337,35 +263,35 @@ async function fetchAttestationHistory(): Promise<AttestationHistoryItem[]> {
   const events: AttestationHistoryItem[] = [];
   const seen = new Set<string>();
 
-  for (let index = 0; index < successfulSignatures.length && events.length < INTERNAL_HISTORY_LIMIT; index += TX_BATCH_SIZE) {
-    const batch = successfulSignatures.slice(index, index + TX_BATCH_SIZE);
-    const transactionResults = await rpcBatchRequest<RpcTransaction>(
-      batch.map(({ signature }) => ({
-        method: "getTransaction",
-        params: [signature, { encoding: "json", commitment: "confirmed", maxSupportedTransactionVersion: 0 }],
-        id: signature,
-      })),
-      5_000,
-    );
-    const transactions = batch.map(({ signature, blockTime }, transactionIndex) => ({
-      signature,
-      blockTime,
-      transaction: transactionResults[transactionIndex],
-    }));
-
-    for (const item of transactions) {
-      if (!item.transaction) continue;
-      const logMessages = item.transaction.meta?.logMessages;
-      if (!logMessages) continue;
-
-      for (const log of logMessages) {
-        if (!log.startsWith("Program data: ")) continue;
-        const data = Buffer.from(log.replace("Program data: ", ""), "base64");
-        const event = decodeAttestationEvent(data, item.signature, item.transaction.blockTime ?? item.blockTime);
-        if (!event || seen.has(event.signature)) continue;
-        seen.add(event.signature);
-        events.push(event);
+  const transactionInputs = successfulSignatures.slice(0, TX_SCAN_LIMIT);
+  const transactions = await Promise.all(
+    transactionInputs.map(async ({ signature, blockTime }) => {
+      try {
+        const transaction = await rpcRequest<RpcTransaction | null>(
+          "getTransaction",
+          [signature, { encoding: "json", commitment: "confirmed", maxSupportedTransactionVersion: 0 }],
+          signature,
+          5_000,
+        );
+        return { signature, blockTime, transaction };
+      } catch {
+        return null;
       }
+    }),
+  );
+
+  for (const item of transactions) {
+    if (!item?.transaction) continue;
+    const logMessages = item.transaction.meta?.logMessages;
+    if (!logMessages) continue;
+
+    for (const log of logMessages) {
+      if (!log.startsWith("Program data: ")) continue;
+      const data = Buffer.from(log.replace("Program data: ", ""), "base64");
+      const event = decodeAttestationEvent(data, item.signature, item.transaction.blockTime ?? item.blockTime);
+      if (!event || seen.has(event.signature)) continue;
+      seen.add(event.signature);
+      events.push(event);
     }
   }
 
@@ -374,32 +300,21 @@ async function fetchAttestationHistory(): Promise<AttestationHistoryItem[]> {
 
 async function getOnchainSnapshot(): Promise<SonarSnapshot> {
   const historyPromise = timeout(fetchAttestationHistory(), [], HISTORY_TIMEOUT_MS);
-  const accounts = await fetchProgramAccounts();
+  const [network, registry, sdkObservers] = await Promise.all([
+    client.getNetworkHealth(),
+    client.getRegistry(),
+    client.getAllObservers(),
+  ] satisfies [Promise<NetworkHealth>, Promise<Registry>, Promise<Observer[]>]);
   const attestationHistory = await historyPromise;
   const recentGlobalAttestations = attestationHistory.slice(0, HISTORY_LIMIT);
-  const networkDiscriminator = discriminator("NetworkHealthAccount");
-  const observerDiscriminator = discriminator("ObserverAccount");
-  const registryDiscriminator = discriminator("RegistryAccount");
-  let network: NetworkHealthAccount | null = null;
-  let registry: RegistryAccount | null = null;
-  const observers: ObserverView[] = [];
-
-  for (const account of accounts) {
-    const data = Buffer.from(account.account.data[0], "base64");
-    if (matchesDiscriminator(data, networkDiscriminator)) network = decodeNetworkHealth(data);
-    if (matchesDiscriminator(data, observerDiscriminator)) {
-      const observer = decodeObserver(data);
-      observer.recentAttestations = attestationHistory
-        .filter((attestation) => attestation.observer === observer.pubkey)
-        .slice(0, HISTORY_LIMIT);
-      observers.push(observer);
-    }
-    if (matchesDiscriminator(data, registryDiscriminator)) registry = decodeRegistry(data);
-  }
-
-  if (!network || !registry) {
-    throw new Error("Required s0nar accounts were not found on-chain");
-  }
+  const observers = sdkObservers.map((observer) => {
+    const view = mapObserver(observer);
+    view.recentAttestations = attestationHistory
+      .filter((attestation) => attestation.observer === view.pubkey)
+      .slice(0, HISTORY_LIMIT);
+    return view;
+  });
+  const regions = network.regionScores.map((region) => mapRegionScore(region, network.lastUpdatedSlot));
 
   return {
     source: "onchain",
@@ -407,31 +322,54 @@ async function getOnchainSnapshot(): Promise<SonarSnapshot> {
     programId: PROGRAM_ID,
     history: recentGlobalAttestations.map((item) => item.score).reverse(),
     attestationHistory: recentGlobalAttestations,
-    regions: network.regions,
+    regions,
     observers: observers.sort((a, b) => b.score - a.score),
     network: {
-      score: network.score,
-      reachability: network.reachability,
-      slotLatency: network.slotLatency,
-      activeObservers: network.activeObservers || registry.activeCount,
+      score: network.healthScore,
+      reachability: network.tpuReachabilityPct,
+      slotLatency: network.avgSlotLatencyMs,
+      activeObservers: network.activeObserverCount || registry.activeCount,
       totalObservers: registry.observerCount || observers.length,
-      activeRegions: network.activeRegions,
-      totalRegions: network.regions.length,
-      lastUpdatedSlot: network.lastUpdatedSlot,
-      totalAttestations: network.totalAttestations,
-      updatedSeconds: network.lastUpdatedTs > 0 ? Math.max(0, Math.floor(Date.now() / 1000 - network.lastUpdatedTs)) : 0,
+      activeRegions: network.activeRegionCount,
+      totalRegions: regions.length,
+      lastUpdatedSlot: Number(network.lastUpdatedSlot),
+      totalAttestations: Number(network.totalAttestations),
+      updatedSeconds: network.lastUpdatedTs > BigInt(0) ? Math.max(0, Math.floor(Date.now() / 1000 - Number(network.lastUpdatedTs))) : 0,
     },
     registry: {
       paused: registry.paused,
       observerCap: registry.maxObservers,
-      minStakeSol: registry.minStakeSol,
+      minStakeSol: lamportsToSol(registry.minStakeLamports),
     },
   };
 }
 
+async function getCachedOnchainSnapshot() {
+  const now = Date.now();
+  if (cachedSnapshot && now - cachedSnapshotAt < SNAPSHOT_TTL_MS) {
+    return cachedSnapshot;
+  }
+
+  snapshotPromise ??= getOnchainSnapshot()
+    .then((snapshot) => {
+      cachedSnapshot = snapshot;
+      cachedSnapshotAt = Date.now();
+      return snapshot;
+    })
+    .finally(() => {
+      snapshotPromise = null;
+    });
+
+  return snapshotPromise;
+}
+
 export async function GET() {
   try {
-    return NextResponse.json(await getOnchainSnapshot());
+    return NextResponse.json(await getCachedOnchainSnapshot(), {
+      headers: {
+        "cache-control": "private, max-age=0, must-revalidate",
+      },
+    });
   } catch (error) {
     return NextResponse.json(
       {

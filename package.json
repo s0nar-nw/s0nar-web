@@ -11,6 +11,7 @@
   "dependencies": {
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "10.0.0-alpha.2",
+    "@solana/web3.js": "^1.98.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.11.0",
@@ -19,6 +20,7 @@
     "radix-ui": "^1.4.3",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "s0nar-sdk": "^0.1.0",
     "shadcn": "^4.4.0",
     "tailwind-merge": "^3.5.0",
     "three": "^0.184.0",
