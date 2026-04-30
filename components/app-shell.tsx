@@ -2,7 +2,11 @@ import { Navbar } from "@/components/navbar";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative min-h-screen bg-canvas text-foreground">
+    <div className="relative min-h-screen overflow-hidden bg-canvas text-foreground">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.42),rgba(0,0,0,0.86)_34%,rgba(0,0,0,0.96)),url('/bg-hero.png')] bg-[length:100%_auto] bg-top bg-no-repeat"
+      />
       {/* noise overlay */}
       <div
         aria-hidden="true"
