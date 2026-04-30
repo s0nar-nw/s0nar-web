@@ -13,7 +13,7 @@ import {
   Skeleton,
   StatusPill,
 } from "@/components/sonar-ui";
-import { useSonarSnapshot } from "@/lib/use-sonar-snapshot";
+import { useSonarSnapshot } from "@/hooks/use-sonar-snapshot";
 
 const MIN_STAKE_SOL = 0.1;
 

@@ -11,7 +11,7 @@ import {
 } from "@/components/sonar-ui";
 import { ScoreMomentumPanel } from "@/components/dashboard/score-momentum-panel";
 import { NetworkSidebar } from "@/components/dashboard/network-sidebar";
-import { useSonarSnapshot } from "@/lib/use-sonar-snapshot";
+import { useSonarSnapshot } from "@/hooks/use-sonar-snapshot";
 
 function shortKey(value: string) {
   return `${value.slice(0, 4)}...${value.slice(-4)}`;

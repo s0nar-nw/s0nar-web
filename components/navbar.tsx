@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useSonarSnapshot } from "@/lib/use-sonar-snapshot";
+import { useSonarSnapshot } from "@/hooks/use-sonar-snapshot";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [

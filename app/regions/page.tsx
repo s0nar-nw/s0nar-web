@@ -11,7 +11,7 @@ import {
   StatusPill,
 } from "@/components/sonar-ui";
 import { REGION_PINS, type RegionScoreView } from "@/lib/sonar-static";
-import { useSonarSnapshot } from "@/lib/use-sonar-snapshot";
+import { useSonarSnapshot } from "@/hooks/use-sonar-snapshot";
 
 function CoverageMap({
   selected,

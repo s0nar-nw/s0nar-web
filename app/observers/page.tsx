@@ -13,7 +13,7 @@ import {
 } from "@/components/sonar-ui";
 import { DashboardHero } from "@/components/dashboard/dashboard-hero";
 import { REGIONS, type ObserverView } from "@/lib/sonar-static";
-import { useSonarSnapshot } from "@/lib/use-sonar-snapshot";
+import { useSonarSnapshot } from "@/hooks/use-sonar-snapshot";
 
 type StatusFilter = "all" | "active" | "inactive";
 type SortKey = "score" | "rtt" | "slot";
