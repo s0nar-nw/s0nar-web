@@ -69,7 +69,11 @@ export default function ObserversPage() {
     return [...observers]
       .filter((observer) => region === "All" || observer.region === region)
       .filter((observer) =>
-        status === "all" ? true : status === "active" ? observer.active : !observer.active,
+        status === "all"
+          ? true
+          : status === "active"
+            ? observer.active
+            : !observer.active,
       )
       .sort((a, b) => {
         if (sort === "score") return b.score - a.score;
@@ -85,7 +89,11 @@ export default function ObserversPage() {
           eyebrow="Registry / Devnet"
           title="Observer registry"
           description="Every active observer is visible, stake-backed, and traceable to a region-level view of network health."
-          aside={<StatusPill>{loading ? "Fetching on-chain" : "Unavailable"}</StatusPill>}
+          aside={
+            <StatusPill>
+              {loading ? "Fetching on-chain" : "Unavailable"}
+            </StatusPill>
+          }
         />
         <Panel accent className="mb-[3.2rem]">
           <div className="grid gap-6 min-[901px]:grid-cols-[minmax(0,1fr)_18rem]">
@@ -117,10 +125,9 @@ export default function ObserversPage() {
   const inactiveCount = observers.length - activeCount;
   const avgScore =
     Math.round(
-      observers.filter((observer) => observer.active).reduce(
-        (sum, observer) => sum + observer.score,
-        0,
-      ) / activeCount,
+      observers
+        .filter((observer) => observer.active)
+        .reduce((sum, observer) => sum + observer.score, 0) / activeCount,
     ) || 0;
 
   return (
@@ -138,14 +145,32 @@ export default function ObserversPage() {
         description="Filter the active set by region and status, then pivot the table by score, RTT, or freshness."
         statusLabel="Live registry"
         metrics={[
-          { label: "Visible observers", value: rows.length, hint: "Current filtered view", accent: true },
-          { label: "Active set", value: activeCount, hint: `${inactiveCount} inactive` },
-          { label: "Median score", value: avgScore, hint: "Across active observers" },
+          {
+            label: "Visible observers",
+            value: rows.length,
+            hint: "Current filtered view",
+            accent: true,
+          },
+          {
+            label: "Active set",
+            value: activeCount,
+            hint: `${inactiveCount} inactive`,
+          },
+          {
+            label: "Median score",
+            value: avgScore,
+            hint: "Across active observers",
+          },
         ]}
         sidebar={
           <div className="grid gap-[1.15rem]">
             <SectionTitle>Filters</SectionTitle>
-            <FilterChips label="Region" options={REGIONS} value={region} onChange={setRegion} />
+            <FilterChips
+              label="Region"
+              options={REGIONS}
+              value={region}
+              onChange={setRegion}
+            />
             <FilterChips
               label="Status"
               options={["all", "active", "inactive"] as const}
@@ -178,7 +203,16 @@ export default function ObserversPage() {
           <table className="w-full border-collapse">
             <thead>
               <tr>
-                {["Observer", "Region", "Status", "Stake", "Last slot", "Reach", "RTT", "Score"].map((h) => (
+                {[
+                  "Observer",
+                  "Region",
+                  "Status",
+                  "Stake",
+                  "Last slot",
+                  "Reach",
+                  "RTT",
+                  "Score",
+                ].map((h) => (
                   <th
                     key={h}
                     className="border-b border-[rgba(255,255,255,0.08)] px-[0.82rem] py-[0.74rem] text-left align-middle text-[0.58rem] font-bold uppercase tracking-[0.22em] text-[rgba(245,255,249,0.36)]"
@@ -203,7 +237,11 @@ export default function ObserversPage() {
                     {observer.region}
                   </td>
                   <td className="border-b border-[rgba(255,255,255,0.08)] px-[0.82rem] py-[0.74rem] align-middle">
-                    {observer.active ? <StatusPill active>Active</StatusPill> : <StatusPill>Inactive</StatusPill>}
+                    {observer.active ? (
+                      <StatusPill active>Active</StatusPill>
+                    ) : (
+                      <StatusPill>Inactive</StatusPill>
+                    )}
                   </td>
                   <td className="border-b border-[rgba(255,255,255,0.08)] px-[0.82rem] py-[0.74rem] align-middle font-mono text-[0.72rem] [font-variant-numeric:tabular-nums] text-[rgba(245,255,249,1)]">
                     {observer.stake} SOL

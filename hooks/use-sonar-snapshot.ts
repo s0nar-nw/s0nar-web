@@ -37,7 +37,8 @@ async function fetchSnapshot(): Promise<SonarSnapshot> {
 }
 
 function refreshSnapshot() {
-  if (inFlight || (typeof document !== "undefined" && document.hidden)) return inFlight;
+  if (inFlight || (typeof document !== "undefined" && document.hidden))
+    return inFlight;
 
   inFlight = fetchSnapshot()
     .then((snapshot) => emit({ snapshot, loading: false, error: null }))
@@ -45,7 +46,10 @@ function refreshSnapshot() {
       emit({
         snapshot: state.snapshot,
         loading: false,
-        error: error instanceof Error ? error.message : "On-chain snapshot unavailable",
+        error:
+          error instanceof Error
+            ? error.message
+            : "On-chain snapshot unavailable",
       });
     })
     .finally(() => {
@@ -77,7 +81,11 @@ function getSnapshot() {
 }
 
 export function useSonarSnapshot(): SonarState {
-  const snapshotState = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+  const snapshotState = useSyncExternalStore(
+    subscribe,
+    getSnapshot,
+    getSnapshot,
+  );
 
   useEffect(() => {
     const onVisible = () => {

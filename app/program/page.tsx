@@ -25,8 +25,10 @@ const SCHEMAS = [
 ] as const;
 
 // Shared table cell classes
-const th = "border-b border-[rgba(255,255,255,0.08)] px-[0.82rem] py-[0.74rem] text-left align-middle text-[0.58rem] font-bold uppercase tracking-[0.22em] text-[rgba(245,255,249,0.36)]";
-const td = "border-b border-[rgba(255,255,255,0.08)] px-[0.82rem] py-[0.74rem] text-[0.72rem] leading-[1.45] align-middle text-[rgba(245,255,249,0.62)]";
+const th =
+  "border-b border-[rgba(255,255,255,0.08)] px-[0.82rem] py-[0.74rem] text-left align-middle text-[0.58rem] font-bold uppercase tracking-[0.22em] text-[rgba(245,255,249,0.36)]";
+const td =
+  "border-b border-[rgba(255,255,255,0.08)] px-[0.82rem] py-[0.74rem] text-[0.72rem] leading-[1.45] align-middle text-[rgba(245,255,249,0.62)]";
 const tdMono = `${td} font-mono [font-variant-numeric:tabular-nums] text-[rgba(245,255,249,1)]`;
 const tdAccent = `${td} font-mono [font-variant-numeric:tabular-nums] text-[#2de19b]`;
 
@@ -55,7 +57,8 @@ export default function ProgramPage() {
                 Program ID
               </h2>
               <p className="mt-[0.95rem] max-w-lg text-[0.76rem] leading-[1.6] text-[rgba(245,255,249,0.62)]">
-                The single source of truth for explorer lookups, CPI consumers, and on-chain registry reads.
+                The single source of truth for explorer lookups, CPI consumers,
+                and on-chain registry reads.
               </p>
             </div>
             <StatusPill active>Upgradeable</StatusPill>
@@ -66,7 +69,9 @@ export default function ProgramPage() {
           </div>
           <div className="mt-[1.2rem] flex flex-wrap gap-3">
             <CopyButton text={programId} />
-            <ActionLink href={`https://explorer.solana.com/address/${programId}?cluster=devnet`}>
+            <ActionLink
+              href={`https://explorer.solana.com/address/${programId}?cluster=devnet`}
+            >
               Explorer
             </ActionLink>
           </div>
@@ -81,7 +86,9 @@ export default function ProgramPage() {
                 className="border-b border-[rgba(255,255,255,0.08)] pb-[0.95rem] last:border-0 last:pb-0"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="text-[0.92rem] font-semibold uppercase tracking-[-0.04em]">{pda.name}</div>
+                  <div className="text-[0.92rem] font-semibold uppercase tracking-[-0.04em]">
+                    {pda.name}
+                  </div>
                   <StatusPill>{pda.size}</StatusPill>
                 </div>
                 <div className="mt-[0.55rem] font-mono text-[0.66rem] font-semibold uppercase tracking-[0.18em] text-[rgba(245,255,249,0.36)]">
@@ -191,8 +198,12 @@ export default function ProgramPage() {
                   key={event.name}
                   className="border-b border-[rgba(255,255,255,0.08)] pb-[0.95rem] last:border-0 last:pb-0"
                 >
-                  <div className="text-[0.92rem] font-semibold uppercase tracking-[-0.04em]">{event.name}</div>
-                  <p className="mt-[0.8rem] max-w-2xl text-[0.74rem] leading-[1.65] text-[rgba(245,255,249,0.62)]">{event.desc}</p>
+                  <div className="text-[0.92rem] font-semibold uppercase tracking-[-0.04em]">
+                    {event.name}
+                  </div>
+                  <p className="mt-[0.8rem] max-w-2xl text-[0.74rem] leading-[1.65] text-[rgba(245,255,249,0.62)]">
+                    {event.desc}
+                  </p>
                 </div>
               ))}
             </div>

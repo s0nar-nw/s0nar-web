@@ -34,7 +34,11 @@ function CoverageMap({
         Observer coverage map
       </SectionTitle>
       <svg viewBox="0 0 960 480" className="w-full">
-        <g fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" strokeWidth="0.8">
+        <g
+          fill="rgba(255,255,255,0.04)"
+          stroke="rgba(255,255,255,0.08)"
+          strokeWidth="0.8"
+        >
           <path d="M120,80 L240,70 L270,100 L280,160 L260,200 L240,240 L200,260 L160,240 L140,200 L100,180 L90,130 Z" />
           <path d="M210,260 L280,250 L300,300 L290,370 L250,400 L210,380 L190,320 Z" />
           <path d="M430,80 L530,70 L560,100 L550,150 L500,160 L460,150 L430,130 Z" />
@@ -51,16 +55,47 @@ function CoverageMap({
           const active = selected === region.id;
           if (!pin) return null;
           return (
-            <g key={region.id} onClick={() => onSelect(region.id)} className="cursor-pointer">
+            <g
+              key={region.id}
+              onClick={() => onSelect(region.id)}
+              className="cursor-pointer"
+            >
               {!region.stale && (
-                <circle cx={pin.cx} cy={pin.cy} r={active ? 24 : 18} fill="none" stroke="rgba(45,225,155,0.35)" />
+                <circle
+                  cx={pin.cx}
+                  cy={pin.cy}
+                  r={active ? 24 : 18}
+                  fill="none"
+                  stroke="rgba(45,225,155,0.35)"
+                />
               )}
-              <circle cx={pin.cx} cy={pin.cy} r={active ? 9 : 7} fill={region.stale ? "rgba(255,255,255,0.22)" : "#2DE19B"} opacity={region.stale ? 0.5 : 1} />
-              <text x={pin.cx} y={pin.cy - 16} textAnchor="middle" style={{ fill: "rgba(255,255,255,0.52)", fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase" }}>
+              <circle
+                cx={pin.cx}
+                cy={pin.cy}
+                r={active ? 9 : 7}
+                fill={region.stale ? "rgba(255,255,255,0.22)" : "#2DE19B"}
+                opacity={region.stale ? 0.5 : 1}
+              />
+              <text
+                x={pin.cx}
+                y={pin.cy - 16}
+                textAnchor="middle"
+                style={{
+                  fill: "rgba(255,255,255,0.52)",
+                  fontSize: 10,
+                  letterSpacing: "0.16em",
+                  textTransform: "uppercase",
+                }}
+              >
                 {region.name}
               </text>
               {!region.stale && (
-                <text x={pin.cx} y={pin.cy + 22} textAnchor="middle" style={{ fill: "#2DE19B", fontSize: 12, fontWeight: 700 }}>
+                <text
+                  x={pin.cx}
+                  y={pin.cy + 22}
+                  textAnchor="middle"
+                  style={{ fill: "#2DE19B", fontSize: 12, fontWeight: 700 }}
+                >
                   {region.score}
                 </text>
               )}
@@ -83,7 +118,11 @@ export default function RegionsPage() {
           eyebrow="Coverage / Devnet"
           title="Regional breakdown"
           description="Geographic visibility matters. Each region contributes an independent view of validator reachability and slot propagation."
-          aside={<StatusPill>{loading ? "Fetching on-chain" : "Unavailable"}</StatusPill>}
+          aside={
+            <StatusPill>
+              {loading ? "Fetching on-chain" : "Unavailable"}
+            </StatusPill>
+          }
         />
         <section className="mb-[3.2rem] grid gap-4 min-[901px]:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
           <Panel>
@@ -108,7 +147,10 @@ export default function RegionsPage() {
 
   const { regions } = snapshot;
   const activeRegions = regions.filter((region) => !region.stale);
-  const current = regions.find((region) => region.id === selected) ?? activeRegions[0] ?? regions[0];
+  const current =
+    regions.find((region) => region.id === selected) ??
+    activeRegions[0] ??
+    regions[0];
 
   return (
     <PageFrame wide>
@@ -116,11 +158,17 @@ export default function RegionsPage() {
         eyebrow="Coverage / Devnet"
         title="Regional breakdown"
         description="Geographic visibility matters. Each region contributes an independent view of validator reachability and slot propagation."
-        aside={<StatusPill active>{activeRegions.length} active regions</StatusPill>}
+        aside={
+          <StatusPill active>{activeRegions.length} active regions</StatusPill>
+        }
       />
 
       <section className="mb-[3.2rem] grid gap-4 min-[901px]:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)] min-[901px]:items-stretch">
-        <CoverageMap selected={selected} onSelect={setSelected} regions={regions} />
+        <CoverageMap
+          selected={selected}
+          onSelect={setSelected}
+          regions={regions}
+        />
 
         <Panel accent className="grid content-start">
           <div className="flex flex-wrap items-start justify-between gap-5">
@@ -137,14 +185,31 @@ export default function RegionsPage() {
                   : `${current.observers} active observers continue to publish attestations for this zone.`}
               </p>
             </div>
-            {current.stale ? <StatusPill>Excluded</StatusPill> : <StatusPill active>Included</StatusPill>}
+            {current.stale ? (
+              <StatusPill>Excluded</StatusPill>
+            ) : (
+              <StatusPill active>Included</StatusPill>
+            )}
           </div>
 
           <div className="mt-[1.45rem] grid gap-4 grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
-            <MetricCard label="Health" value={current.stale ? "—" : current.score} accent />
-            <MetricCard label="Reachability" value={current.stale ? "—" : `${current.reachability}%`} />
-            <MetricCard label="Avg RTT" value={current.stale ? "—" : `${current.rtt}ms`} />
-            <MetricCard label="Slot latency" value={current.stale ? "—" : `${current.latency}ms`} />
+            <MetricCard
+              label="Health"
+              value={current.stale ? "—" : current.score}
+              accent
+            />
+            <MetricCard
+              label="Reachability"
+              value={current.stale ? "—" : `${current.reachability}%`}
+            />
+            <MetricCard
+              label="Avg RTT"
+              value={current.stale ? "—" : `${current.rtt}ms`}
+            />
+            <MetricCard
+              label="Slot latency"
+              value={current.stale ? "—" : `${current.latency}ms`}
+            />
           </div>
         </Panel>
       </section>

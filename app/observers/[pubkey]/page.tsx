@@ -19,14 +19,22 @@ const MIN_STAKE_SOL = 0.1;
 
 function formatTime(timestamp?: number) {
   if (!timestamp) return "—";
-  return new Date(timestamp * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  return new Date(timestamp * 1000).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
 }
 
 export default function ObserverDetailPage() {
   const { snapshot, loading } = useSonarSnapshot();
   const { pubkey } = useParams<{ pubkey: string }>();
-  const displayKey = decodeURIComponent(typeof pubkey === "string" ? pubkey : "");
-  const observer = snapshot?.observers.find((item) => item.pubkey === displayKey);
+  const displayKey = decodeURIComponent(
+    typeof pubkey === "string" ? pubkey : "",
+  );
+  const observer = snapshot?.observers.find(
+    (item) => item.pubkey === displayKey,
+  );
 
   if (!snapshot || (!observer && loading)) {
     return (
@@ -41,7 +49,11 @@ export default function ObserverDetailPage() {
           eyebrow="Observer detail"
           title="Observer profile"
           description="Latest observer state, recent attestations, and the score trend for this observer."
-          aside={<StatusPill>{loading ? "Fetching on-chain" : "Unavailable"}</StatusPill>}
+          aside={
+            <StatusPill>
+              {loading ? "Fetching on-chain" : "Unavailable"}
+            </StatusPill>
+          }
         />
         <section className="mb-[3.2rem] grid gap-4 min-[901px]:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
           <Panel accent>
@@ -89,9 +101,11 @@ export default function ObserverDetailPage() {
   }
 
   const avgRtt = observer.rtt;
-  const p95Rtt = observer.p95Rtt ?? Math.round((avgRtt * 1.25 + Number.EPSILON) * 10) / 10;
+  const p95Rtt =
+    observer.p95Rtt ?? Math.round((avgRtt * 1.25 + Number.EPSILON) * 10) / 10;
   const slotLatency = observer.slotLatency ?? Math.round(avgRtt * 12);
-  const registeredSlot = observer.registeredAt ?? Math.max(0, observer.slot - 2_442_100);
+  const registeredSlot =
+    observer.registeredAt ?? Math.max(0, observer.slot - 2_442_100);
   const registeredValue = observer.registeredAt
     ? new Date(observer.registeredAt * 1000).toLocaleString()
     : registeredSlot.toLocaleString();
@@ -111,14 +125,22 @@ export default function ObserverDetailPage() {
         eyebrow="Observer detail"
         title="Observer profile"
         description="Latest observer state, recent attestations, and the score trend for this observer."
-        aside={observer.active ? <StatusPill active>Active</StatusPill> : <StatusPill>Inactive</StatusPill>}
+        aside={
+          observer.active ? (
+            <StatusPill active>Active</StatusPill>
+          ) : (
+            <StatusPill>Inactive</StatusPill>
+          )
+        }
       />
 
       <section className="mb-[3.2rem] grid gap-4 min-[901px]:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
         <Panel accent>
           <div className="grid gap-5 min-[700px]:grid-cols-[minmax(0,1fr)_auto] min-[700px]:items-start">
             <div className="min-w-0">
-              <div className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[#2de19b]">Latest attestation</div>
+              <div className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[#2de19b]">
+                Latest attestation
+              </div>
               <h2 className="mt-[0.9rem] text-[clamp(1.35rem,2.2vw,2rem)] font-semibold uppercase leading-none tracking-[-0.06em]">
                 Health
               </h2>
@@ -136,10 +158,26 @@ export default function ObserverDetailPage() {
           </div>
 
           <div className="mt-[1.45rem] grid grid-cols-[repeat(auto-fit,minmax(11rem,1fr))] gap-4">
-            <MetricCard label="Reachability" value={`${observer.reach}/100`} hint="TPU probes that succeeded" />
-            <MetricCard label="Avg RTT" value={`${avgRtt}ms`} hint="Median response latency" />
-            <MetricCard label="Slot latency" value={`${slotLatency}ms`} hint="Below stale threshold" />
-            <MetricCard label="P95 RTT" value={`${p95Rtt}ms`} hint={`Slot ${observer.slot.toLocaleString()}`} />
+            <MetricCard
+              label="Reachability"
+              value={`${observer.reach}/100`}
+              hint="TPU probes that succeeded"
+            />
+            <MetricCard
+              label="Avg RTT"
+              value={`${avgRtt}ms`}
+              hint="Median response latency"
+            />
+            <MetricCard
+              label="Slot latency"
+              value={`${slotLatency}ms`}
+              hint="Below stale threshold"
+            />
+            <MetricCard
+              label="P95 RTT"
+              value={`${p95Rtt}ms`}
+              hint={`Slot ${observer.slot.toLocaleString()}`}
+            />
           </div>
         </Panel>
 
@@ -150,7 +188,12 @@ export default function ObserverDetailPage() {
               items={[
                 { label: "Region", value: observer.region },
                 { label: "PDA seeds", value: '[b"observer", pubkey]' },
-                { label: observer.registeredAt ? "Registered at" : "Registered slot", value: registeredValue },
+                {
+                  label: observer.registeredAt
+                    ? "Registered at"
+                    : "Registered slot",
+                  value: registeredValue,
+                },
                 { label: "Last slot", value: observer.slot.toLocaleString() },
               ]}
             />
@@ -160,7 +203,9 @@ export default function ObserverDetailPage() {
             <SectionTitle>Stake</SectionTitle>
             <div className="mt-5 text-[clamp(2rem,4vw,3.5rem)] font-semibold uppercase leading-none tracking-[-0.08em] text-[#2de19b]">
               {observer.stake}
-              <span className="ml-2 text-[0.75rem] tracking-[0.18em] text-[rgba(245,255,249,0.42)]">SOL</span>
+              <span className="ml-2 text-[0.75rem] tracking-[0.18em] text-[rgba(245,255,249,0.42)]">
+                SOL
+              </span>
             </div>
             <div className="mt-3 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[rgba(245,255,249,0.36)]">
               minimum required {MIN_STAKE_SOL} SOL
@@ -168,7 +213,9 @@ export default function ObserverDetailPage() {
             <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/8">
               <div
                 className="h-full rounded-full bg-[#2de19b] shadow-[0_0_1rem_rgba(45,225,155,0.28)]"
-                style={{ width: `${Math.min(100, (observer.stake / MIN_STAKE_SOL) * 100)}%` }}
+                style={{
+                  width: `${Math.min(100, (observer.stake / MIN_STAKE_SOL) * 100)}%`,
+                }}
               />
             </div>
           </Panel>
@@ -201,14 +248,16 @@ export default function ObserverDetailPage() {
           <table className="w-full border-collapse">
             <thead>
               <tr>
-                {["Slot", "Score", "Reach", "Latency", "Time"].map((heading) => (
-                  <th
-                    key={heading}
-                    className="border-b border-[rgba(255,255,255,0.08)] px-[0.82rem] py-[0.74rem] text-left align-middle text-[0.58rem] font-bold uppercase tracking-[0.22em] text-[rgba(245,255,249,0.36)]"
-                  >
-                    {heading}
-                  </th>
-                ))}
+                {["Slot", "Score", "Reach", "Latency", "Time"].map(
+                  (heading) => (
+                    <th
+                      key={heading}
+                      className="border-b border-[rgba(255,255,255,0.08)] px-[0.82rem] py-[0.74rem] text-left align-middle text-[0.58rem] font-bold uppercase tracking-[0.22em] text-[rgba(245,255,249,0.36)]"
+                    >
+                      {heading}
+                    </th>
+                  ),
+                )}
               </tr>
             </thead>
             <tbody>
@@ -234,7 +283,9 @@ export default function ObserverDetailPage() {
             </tbody>
           </table>
           {recentAttestations.length === 0 ? (
-            <div className="p-4 text-[0.72rem] text-[rgba(245,255,249,0.62)]">No recent attestation events found for this observer.</div>
+            <div className="p-4 text-[0.72rem] text-[rgba(245,255,249,0.62)]">
+              No recent attestation events found for this observer.
+            </div>
           ) : null}
         </div>
       </section>
