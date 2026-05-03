@@ -55,6 +55,14 @@ type RpcTransaction = {
   };
 };
 
+type RegionObserverStats = {
+  count: number;
+  scoreTotal: number;
+  reachabilityTotal: number;
+  latencyTotal: number;
+  rttTotal: number;
+};
+
 let cachedSnapshot: SonarSnapshot | null = null;
 let cachedSnapshotAt = 0;
 let snapshotPromise: Promise<SonarSnapshot> | null = null;
@@ -160,20 +168,65 @@ function sdkRegionName(region: Region) {
   return region;
 }
 
-function mapRegionScore(region: RegionScore, currentSlot: bigint): RegionScoreView {
+function roundTenth(value: number) {
+  return Math.round((value + Number.EPSILON) * 10) / 10;
+}
+
+function buildRegionObserverStats(observers: Observer[]) {
+  const stats = new Map<string, RegionObserverStats>();
+
+  for (const observer of observers) {
+    if (!observer.isActive) continue;
+
+    const latest = observer.latestAttestation;
+    const name = sdkRegionName(observer.region);
+    const reachability = latest.tpuProbed > 0 ? Math.round((latest.tpuReachable / latest.tpuProbed) * 100) : 0;
+    const current = stats.get(name) ?? {
+      count: 0,
+      scoreTotal: 0,
+      reachabilityTotal: 0,
+      latencyTotal: 0,
+      rttTotal: 0,
+    };
+
+    current.count += 1;
+    current.scoreTotal += calculateScore(reachability, latest.slotLatencyMs);
+    current.reachabilityTotal += reachability;
+    current.latencyTotal += latest.slotLatencyMs;
+    current.rttTotal += latest.avgRttUs / 1000;
+    stats.set(name, current);
+  }
+
+  return stats;
+}
+
+function average(total: number, count: number) {
+  return count > 0 ? Math.round(total / count) : 0;
+}
+
+function mapRegionScore(
+  region: RegionScore,
+  currentSlot: bigint,
+  observerStats: Map<string, RegionObserverStats>,
+): RegionScoreView {
   const name = sdkRegionName(region.region);
+  const stats = observerStats.get(name);
+  const observerCount = Math.max(region.observerCount, stats?.count ?? 0);
+  const hasObserverData = observerCount > 0;
+  const aggregateIsFresh =
+    region.lastUpdatedSlot !== BigInt(0) && currentSlot - region.lastUpdatedSlot <= BigInt(STALE_SLOT_THRESHOLD);
+
   return {
     id: REGION_IDS_BY_NAME[name] ?? "other",
     name,
-    score: region.healthScore,
-    reachability: region.reachabilityPct,
-    latency: region.slotLatencyMs,
-    rtt: Math.round((region.avgRttUs / 1000 + Number.EPSILON) * 10) / 10,
-    observers: region.observerCount,
-    stale:
-      region.observerCount === 0 ||
-      region.lastUpdatedSlot === BigInt(0) ||
-      currentSlot - region.lastUpdatedSlot > BigInt(STALE_SLOT_THRESHOLD),
+    score: aggregateIsFresh ? region.healthScore : average(stats?.scoreTotal ?? 0, stats?.count ?? 0),
+    reachability: aggregateIsFresh
+      ? region.reachabilityPct
+      : average(stats?.reachabilityTotal ?? 0, stats?.count ?? 0),
+    latency: aggregateIsFresh ? region.slotLatencyMs : average(stats?.latencyTotal ?? 0, stats?.count ?? 0),
+    rtt: aggregateIsFresh ? roundTenth(region.avgRttUs / 1000) : roundTenth((stats?.rttTotal ?? 0) / (stats?.count ?? 1)),
+    observers: observerCount,
+    stale: !hasObserverData,
   };
 }
 
@@ -191,9 +244,9 @@ function mapObserver(observer: Observer): ObserverView {
     stake: lamportsToSol(observer.stakeLamports),
     slot: Number(latest.slot || observer.lastAttestationSlot),
     reach,
-    rtt: Math.round((latest.avgRttUs / 1000 + Number.EPSILON) * 10) / 10,
+    rtt: roundTenth(latest.avgRttUs / 1000),
     score: observer.isActive ? calculateScore(reach, slotLatency) : 0,
-    p95Rtt: Math.round((latest.p95RttUs / 1000 + Number.EPSILON) * 10) / 10,
+    p95Rtt: roundTenth(latest.p95RttUs / 1000),
     slotLatency,
     tpuReachable,
     tpuProbed,
@@ -314,7 +367,8 @@ async function getOnchainSnapshot(): Promise<SonarSnapshot> {
       .slice(0, HISTORY_LIMIT);
     return view;
   });
-  const regions = network.regionScores.map((region) => mapRegionScore(region, network.lastUpdatedSlot));
+  const observerStats = buildRegionObserverStats(sdkObservers);
+  const regions = network.regionScores.map((region) => mapRegionScore(region, network.lastUpdatedSlot, observerStats));
 
   return {
     source: "onchain",

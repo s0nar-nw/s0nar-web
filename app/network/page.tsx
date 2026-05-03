@@ -85,7 +85,7 @@ export default function NetworkPage() {
   const { network, registry, regions, history, attestationHistory } = snapshot;
   const updatedSeconds =
     networkUpdatedSeconds + (now > snapshotFetchedAt ? Math.floor((now - snapshotFetchedAt) / 1000) : 0);
-  const activeRegions = regions.filter((region) => !region.stale);
+  const activeRegionCount = network.activeRegions;
   const networkMetrics = [
     { label: "Reachability", value: `${network.reachability}%`, hint: "Median active observers" },
     { label: "Slot latency", value: `${network.slotLatency}ms`, hint: "400ms stale ceiling" },
@@ -128,7 +128,7 @@ export default function NetworkPage() {
                     Active regions are inside the healthy band, with stale buckets excluded from aggregation.
                   </p>
                 </div>
-                <StatusPill active>{activeRegions.length} active regions</StatusPill>
+                <StatusPill active>{activeRegionCount} active regions</StatusPill>
               </div>
 
               <div className="grid grid-cols-[repeat(auto-fit,minmax(10.5rem,1fr))] gap-3 border-t border-[rgba(255,255,255,0.08)] pt-5">
@@ -179,7 +179,7 @@ export default function NetworkPage() {
             </div>
           </Panel>
           <NetworkSidebar
-            activeRegions={activeRegions.length}
+            activeRegions={activeRegionCount}
             totalRegions={regions.length}
             observerCap={registry.observerCap}
             minStakeSol={registry.minStakeSol}
