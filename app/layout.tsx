@@ -1,26 +1,14 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, JetBrains_Mono } from "next/font/google";
-import { Analytics } from "@vercel/analytics/next";
+import { Geist } from "next/font/google";
 import "./globals.css";
+import { AppShell } from "@/components/app-shell";
+import { cn } from "@/lib/utils";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const jetbrains = JetBrains_Mono({
-  variable: "--font-jetbrains",
-  subsets: ["latin"],
-});
+const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
   title: "s0nar",
-  description: "s0nar",
+  description: "The on-chain pulse of Solana's network health.",
 };
 
 export default function RootLayout({
@@ -29,12 +17,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${jetbrains.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
-      <Analytics />
+    <html lang="en" className={cn("font-sans", geist.variable)}>
+      <body
+        className="antialiased selection:bg-primary selection:text-primary-foreground"
+        suppressHydrationWarning
+      >
+        <AppShell>{children}</AppShell>
+        {/* <Analytics /> */}
+      </body>
     </html>
   );
 }
