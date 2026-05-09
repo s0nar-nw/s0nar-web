@@ -13,13 +13,13 @@ const STATS = [
 
 export function HeroSection() {
   return (
-    <section className="relative isolate flex min-h-screen w-full items-center justify-start overflow-hidden px-6 pb-28 pt-10 [--hero-gutter:1.5rem] sm:px-10 sm:[--hero-gutter:3rem] lg:min-h-[calc(100vh-6rem)] lg:pb-36 lg:pt-6 lg:[--hero-gutter:clamp(5rem,8vw,12rem)]">
+    <section className="relative isolate flex min-h-screen min-h-[calc(100vh-4rem)] w-full items-start justify-start overflow-hidden px-6 pb-[18rem] pt-16 [--hero-gutter:1.5rem] supports-[height:100svh]:min-h-[calc(100svh-4rem)] sm:px-10 sm:[--hero-gutter:3rem] md:min-h-screen md:items-center md:pb-28 md:pt-10 lg:min-h-[calc(100vh-6rem)] lg:pb-36 lg:pt-6 lg:[--hero-gutter:clamp(5rem,8vw,12rem)]">
       {/* Hero copy */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-        className="absolute left-[var(--hero-gutter)] top-1/2 z-10 flex max-w-[42rem] -translate-y-1/2 flex-col items-start text-left"
+        className="relative z-10 flex max-w-[42rem] flex-col items-start text-left md:absolute md:left-[var(--hero-gutter)] md:top-1/2 md:-translate-y-1/2"
       >
         {/* Eyebrow badge */}
         {/* <motion.div
@@ -35,7 +35,7 @@ export function HeroSection() {
         </motion.div> */}
 
         {/* Headline */}
-        <h1 className="max-w-[11ch] bg-[linear-gradient(180deg,#ffffff_0%,#dfffee_44%,#2de19b_100%)] bg-clip-text text-6xl font-semibold tracking-[-0.055em] text-transparent sm:text-7xl">
+        <h1 className="max-w-[11ch] bg-[linear-gradient(180deg,#ffffff_0%,#dfffee_44%,#2de19b_100%)] bg-clip-text text-[3.15rem] font-semibold leading-[0.95] tracking-[-0.045em] text-transparent sm:text-7xl sm:tracking-[-0.055em]">
           Network <span>Health</span>, on-chain
           <span className="text-primary">.</span>
         </h1>
@@ -45,7 +45,7 @@ export function HeroSection() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.25, duration: 0.8 }}
-          className="mt-5 max-w-[38ch] text-sm leading-[1.65] font-medium text-neutral-400"
+          className="mt-5 max-w-[36ch] text-[0.82rem] font-medium leading-[1.65] text-neutral-400 sm:max-w-[38ch] sm:text-sm"
         >
           s0nar shows whether Solana is reachable, slow, or healthy across
           regions. Check the live score, observer activity, validator client
@@ -57,7 +57,7 @@ export function HeroSection() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.45, duration: 0.8 }}
-          className="mt-8 flex items-center gap-4"
+          className="mt-7 flex flex-wrap items-center gap-3 sm:mt-8 sm:gap-4"
         >
           <ActionLink href="/network" primary>
             Open dashboard
@@ -72,14 +72,14 @@ export function HeroSection() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.65, duration: 0.8 }}
-          className="mt-14 grid grid-cols-2 gap-x-8 gap-y-5 border-t border-white/8 pt-8 sm:flex sm:items-start"
+          className="mt-10 grid grid-cols-2 gap-x-7 gap-y-4 border-t border-white/8 pt-6 sm:mt-14 sm:flex sm:items-start sm:gap-x-8 sm:gap-y-5 sm:pt-8"
         >
           {STATS.map((stat, i) => (
             <div key={i} className="flex flex-col gap-1">
-              <span className="text-2xl font-semibold tracking-tight text-white">
+              <span className="text-[1.15rem] font-semibold leading-none tracking-tight text-white sm:text-2xl">
                 {stat.value}
               </span>
-              <span className="text-xs font-medium text-neutral-500">
+              <span className="text-[0.68rem] font-medium leading-[1.35] text-neutral-500 sm:text-xs">
                 {stat.label}
               </span>
             </div>
@@ -93,8 +93,8 @@ export function HeroSection() {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ delay: 0.3, duration: 1.35, ease: "easeOut" }}
         className="
-          absolute right-[-64vw] bottom-[-92vw] z-[1]
-          h-[154vw] w-[154vw]
+          absolute right-[-45vw] bottom-[-34vw] z-[1]
+          h-[118vw] w-[118vw]
           rounded-full
           drop-shadow-[0_0_3.8rem_rgba(45,225,155,0.42)]
           sm:right-[-50vw] sm:bottom-[-72vw] sm:h-[128vw] sm:w-[128vw]
@@ -129,7 +129,7 @@ export function HeroSection() {
       {/* Bottom fade */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-28 bg-[linear-gradient(180deg,transparent,rgba(0,0,0,0.52)_72%,#000)]"
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-[24rem] bg-[linear-gradient(180deg,transparent_0%,rgba(0,0,0,0.32)_18%,rgba(0,0,0,0.78)_48%,#000_78%,#000_100%)] sm:h-40 sm:bg-[linear-gradient(180deg,transparent,rgba(0,0,0,0.52)_72%,#000)]"
       />
     </section>
   );

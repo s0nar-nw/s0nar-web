@@ -226,7 +226,7 @@ export default function ObserversPage() {
         </SectionTitle>
 
         <div className="relative overflow-auto rounded-[22px] border border-[rgba(255,255,255,0.06)] bg-[linear-gradient(180deg,rgba(4,14,10,0.9),rgba(0,0,0,0.94))] shadow-[0_24px_60px_rgba(0,0,0,0.28)] backdrop-blur-[18px] after:pointer-events-none after:absolute after:inset-px after:rounded-[inherit] after:border-t after:border-white/5">
-          <table className="w-full border-collapse">
+          <table className="min-w-[72rem] w-full border-collapse">
             <thead>
               <tr>
                 {[

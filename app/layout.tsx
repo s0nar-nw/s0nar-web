@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AppShell } from "@/components/app-shell";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
   title: "s0nar",
@@ -19,7 +20,7 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <AppShell>{children}</AppShell>
-        {/* <Analytics /> */}
+        <Analytics />
       </body>
     </html>
   );

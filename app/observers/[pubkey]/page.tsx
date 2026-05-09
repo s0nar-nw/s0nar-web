@@ -259,7 +259,7 @@ export default function ObserverDetailPage() {
           Attestation history
         </SectionTitle>
         <div className="relative overflow-auto rounded-[16px] border border-[rgba(255,255,255,0.06)] bg-[linear-gradient(180deg,rgba(4,14,10,0.9),rgba(0,0,0,0.94))]">
-          <table className="w-full border-collapse">
+          <table className="min-w-[36rem] w-full border-collapse">
             <thead>
               <tr>
                 {["Slot", "Score", "Reach", "Latency", "Time"].map(

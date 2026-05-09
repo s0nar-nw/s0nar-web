@@ -59,7 +59,7 @@ export function PageIntro({
     <section className="mb-[3.2rem] flex flex-wrap items-end justify-between gap-[2.4rem] max-[900px]:items-start">
       <div className="max-w-195">
         <Eyebrow>{eyebrow}</Eyebrow>
-        <h1 className="mt-4 text-[clamp(1.7rem,4.4vw,3.8rem)] font-semibold uppercase leading-none tracking-[-0.06em]">
+        <h1 className="mt-4 text-[clamp(1.55rem,4.4vw,3.8rem)] font-semibold uppercase leading-none tracking-[-0.045em] sm:tracking-[-0.06em]">
           {title}
         </h1>
         {description ? (
@@ -82,12 +82,12 @@ export function SectionTitle({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="mb-4 flex items-center gap-[0.65rem]">
+    <div className="mb-4 flex flex-wrap items-center gap-[0.65rem]">
       <div className="whitespace-nowrap text-[0.64rem] font-semibold uppercase tracking-[0.18em] text-[rgba(245,255,249,0.62)]">
         {children}
       </div>
-      <div className="h-px flex-1 bg-[linear-gradient(90deg,rgba(45,225,155,0.24),transparent)]" />
-      {action ? <div>{action}</div> : null}
+      <div className="h-px min-w-10 flex-1 bg-[linear-gradient(90deg,rgba(45,225,155,0.24),transparent)]" />
+      {action ? <div className="max-sm:hidden">{action}</div> : null}
     </div>
   );
 }

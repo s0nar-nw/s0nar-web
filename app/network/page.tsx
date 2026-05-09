@@ -174,9 +174,9 @@ export default function NetworkPage() {
       />
 
       <section className="mb-12">
-        <Panel accent className="p-[1.6rem]">
-          <div className="grid gap-8 min-[901px]:grid-cols-[minmax(15rem,0.72fr)_minmax(0,1fr)] min-[901px]:items-stretch">
-            <div className="flex flex-col justify-start gap-5">
+        <Panel accent className="max-w-full p-[1.6rem]">
+          <div className="grid min-w-0 gap-8 min-[901px]:grid-cols-[minmax(15rem,0.72fr)_minmax(0,1fr)] min-[901px]:items-stretch">
+            <div className="flex min-w-0 flex-col justify-start gap-5">
               <div className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[#2de19b]">
                 Primary signal
               </div>
@@ -190,13 +190,13 @@ export default function NetworkPage() {
               </div>
             </div>
 
-            <div className="grid content-between gap-6">
+            <div className="grid min-w-0 content-between gap-6">
               <div className="flex flex-wrap items-start justify-between gap-5">
                 <div>
                   <h2 className="text-[clamp(1.55rem,2.8vw,2.4rem)] font-semibold uppercase leading-[0.95] tracking-[-0.08em]">
                     Global health
                   </h2>
-                  <p className="mt-[0.95rem] max-w-150 text-[0.82rem] leading-[1.65] text-[rgba(245,255,249,0.62)]">
+                  <p className="mt-[0.95rem] max-w-150 break-words text-[0.82rem] leading-[1.65] text-[rgba(245,255,249,0.62)]">
                     Active regions are inside the healthy band, with stale
                     buckets excluded from aggregation.
                   </p>
@@ -277,7 +277,7 @@ export default function NetworkPage() {
           Attestation history
         </SectionTitle>
         <div className="relative overflow-auto rounded-[16px] border border-[rgba(255,255,255,0.06)] bg-[linear-gradient(180deg,rgba(4,14,10,0.9),rgba(0,0,0,0.94))]">
-          <table className="w-full border-collapse">
+          <table className="min-w-[44rem] w-full border-collapse">
             <thead>
               <tr>
                 {[

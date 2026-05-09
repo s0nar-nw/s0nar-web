@@ -221,7 +221,7 @@ function DashboardHeader({
           <AreaChart className="h-3.5 w-3.5 text-[#2de19b]" aria-hidden="true" />
           Dashboard / Devnet
         </div>
-        <h2 className="mt-4 text-[clamp(1.8rem,4vw,3.35rem)] font-semibold uppercase leading-none tracking-[-0.06em]">
+        <h2 className="mt-4 text-[clamp(1.55rem,4vw,3.35rem)] font-semibold uppercase leading-none tracking-[-0.045em] sm:tracking-[-0.06em]">
           {title}
         </h2>
         <p className="mt-3 max-w-180 text-[0.82rem] leading-[1.7] text-[rgba(245,255,249,0.62)]">
@@ -276,10 +276,10 @@ function NetworkView({
   ] as const;
 
   return (
-    <div className="grid gap-6">
-      <Panel accent className="p-[1.6rem]">
-        <div className="grid gap-8 min-[901px]:grid-cols-[minmax(13rem,0.62fr)_minmax(0,1fr)] min-[901px]:items-stretch">
-          <div className="flex flex-col justify-start gap-5">
+    <div className="grid min-w-0 gap-6">
+      <Panel accent className="max-w-full p-[1.6rem]">
+        <div className="grid min-w-0 gap-8 min-[901px]:grid-cols-[minmax(13rem,0.62fr)_minmax(0,1fr)] min-[901px]:items-stretch">
+          <div className="flex min-w-0 flex-col justify-start gap-5">
             <div className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[#2de19b]">
               Primary signal
             </div>
@@ -293,13 +293,13 @@ function NetworkView({
             </div>
           </div>
 
-          <div className="grid content-between gap-6">
+          <div className="grid min-w-0 content-between gap-6">
             <div className="flex flex-wrap items-start justify-between gap-5">
               <div>
                 <h3 className="text-[clamp(1.55rem,2.8vw,2.4rem)] font-semibold uppercase leading-[0.95] tracking-[-0.08em]">
                   Global health
                 </h3>
-                <p className="mt-[0.95rem] max-w-150 text-[0.82rem] leading-[1.65] text-[rgba(245,255,249,0.62)]">
+                <p className="mt-[0.95rem] max-w-150 break-words text-[0.82rem] leading-[1.65] text-[rgba(245,255,249,0.62)]">
                   Active regions are inside the healthy band, with stale buckets excluded from aggregation.
                 </p>
               </div>
@@ -355,7 +355,7 @@ function AttestationTable({
 }) {
   return (
     <div className="relative overflow-auto rounded-[16px] border border-[rgba(255,255,255,0.06)] bg-[linear-gradient(180deg,rgba(4,14,10,0.9),rgba(0,0,0,0.94))]">
-      <table className="w-full border-collapse">
+      <table className="min-w-[44rem] w-full border-collapse">
         <thead>
           <tr>
             {["Slot", "Observer", "Region", "Score", "Reach", "Latency", "Time"].map((heading) => (
@@ -546,7 +546,7 @@ function ObserversView({
         </SectionTitle>
 
         <div className="relative overflow-auto rounded-[22px] border border-[rgba(255,255,255,0.06)] bg-[linear-gradient(180deg,rgba(4,14,10,0.9),rgba(0,0,0,0.94))] shadow-[0_24px_60px_rgba(0,0,0,0.28)] backdrop-blur-[18px] after:pointer-events-none after:absolute after:inset-px after:rounded-[inherit] after:border-t after:border-white/5">
-          <table className="w-full border-collapse">
+          <table className="min-w-[72rem] w-full border-collapse">
             <thead>
               <tr>
                 {["Observer", "Region", "Status", "Stake", "Last slot", "Reach", "Stake Reach", "Clients seen", "RTT", "Score"].map((heading) => (
@@ -937,7 +937,7 @@ export function DashboardShell() {
         paused={snapshot?.registry.paused ?? false}
       />
 
-      <section className="min-w-0">
+      <section className="min-w-0 max-w-full max-[759px]:order-first">
         <DashboardHeader
           tab={activeTab}
           status={

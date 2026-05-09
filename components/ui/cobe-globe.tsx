@@ -102,6 +102,7 @@ export function Cobe({
   const focusRef = useRef<[number, number]>([0, 0])
   const [customLocations, setCustomLocations] = useState<Location[]>([])
   const [isInitializing, setIsInitializing] = useState(true)
+  const [webglUnavailable, setWebglUnavailable] = useState(false)
 
   const [{ r }, api] = useSpring(() => ({
     r: 0,
@@ -220,7 +221,7 @@ export function Cobe({
     window.addEventListener("resize", onResize, { passive: true })
     onResize()
 
-    if (!canvasRef.current) return
+    if (!canvasRef.current || webglUnavailable) return
 
     const rotateMarkers: Marker[] = customLocations
       .filter((loc): loc is Location & { lat: number; long: number } =>
@@ -260,7 +261,14 @@ export function Cobe({
       opacity,
     }
 
-    const globe = createGlobe(canvasRef.current, globeOpts)
+    let globe: ReturnType<typeof createGlobe>
+    try {
+      globe = createGlobe(canvasRef.current, globeOpts)
+    } catch {
+      setWebglUnavailable(true)
+      window.removeEventListener("resize", onResize)
+      return
+    }
 
     // Skip WebGL work when the hero is offscreen or the tab is hidden.
     function tick() {
@@ -384,6 +392,7 @@ export function Cobe({
     opacity,
     defaultMarkers,
     useDefaultMarkers,
+    webglUnavailable,
   ])
 
   const handlePointerDown = (e: React.PointerEvent) => {
@@ -486,16 +495,23 @@ export function Cobe({
 
   return (
     <div className={cn("", className)} style={containerStyle}>
-      <canvas
-        ref={canvasRef}
-        aria-label="Interactive network globe"
-        onPointerDown={handlePointerDown}
-        onPointerUp={handlePointerUp}
-        onPointerOut={handlePointerOut}
-        onMouseMove={handleMouseMove}
-        onTouchMove={handleTouchMove}
-        style={canvasStyle}
-      />
+      {webglUnavailable ? (
+        <div
+          aria-label="Network globe fallback"
+          className="h-full w-full rounded-full border border-[#2de19b]/20 bg-[radial-gradient(circle_at_68%_38%,rgba(45,225,155,0.42),rgba(45,225,155,0.1)_34%,rgba(0,0,0,0)_64%)] shadow-[0_0_4rem_rgba(45,225,155,0.2)]"
+        />
+      ) : (
+        <canvas
+          ref={canvasRef}
+          aria-label="Interactive network globe"
+          onPointerDown={handlePointerDown}
+          onPointerUp={handlePointerUp}
+          onPointerOut={handlePointerOut}
+          onMouseMove={handleMouseMove}
+          onTouchMove={handleTouchMove}
+          style={canvasStyle}
+        />
+      )}
       {variant === "rotate-to-location" && (
         <div
           className="flex flex-col items-center justify-center gap-2 md:flex-row"
