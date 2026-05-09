@@ -19,6 +19,32 @@ type StatusFilter = "all" | "active" | "inactive";
 type SortKey = "score" | "rtt" | "slot";
 const EMPTY_OBSERVERS: ObserverView[] = [];
 
+function ClientCounts({ observer }: { observer: ObserverView }) {
+  const clients = [
+    { label: "AG", count: observer.agaveCount ?? 0, color: "#2de19b" },
+    { label: "FD", count: observer.firedancerCount ?? 0, color: "#60a5fa" },
+    { label: "JI", count: observer.jitoCount ?? 0, color: "#f59e0b" },
+  ].filter((client) => client.count > 0);
+
+  if (clients.length === 0) return <span>—</span>;
+
+  return (
+    <div className="flex flex-wrap gap-x-3 gap-y-1">
+      {clients.map((client) => (
+        <span key={client.label} className="inline-flex items-center gap-1.5">
+          <span
+            className="h-1.5 w-1.5 rounded-full"
+            style={{ backgroundColor: client.color }}
+          />
+          <span>
+            {client.label} {client.count}
+          </span>
+        </span>
+      ))}
+    </div>
+  );
+}
+
 function FilterChips<T extends string>({
   label,
   options,
@@ -210,6 +236,8 @@ export default function ObserversPage() {
                   "Stake",
                   "Last slot",
                   "Reach",
+                  "Stake Reach",
+                  "Clients seen",
                   "RTT",
                   "Score",
                 ].map((h) => (
@@ -251,6 +279,14 @@ export default function ObserversPage() {
                   </td>
                   <td className="border-b border-[rgba(255,255,255,0.08)] px-[0.82rem] py-[0.74rem] align-middle font-mono text-[0.72rem] [font-variant-numeric:tabular-nums] text-[rgba(245,255,249,0.62)]">
                     {observer.active ? `${observer.reach}%` : "—"}
+                  </td>
+                  <td className="border-b border-[rgba(255,255,255,0.08)] px-[0.82rem] py-[0.74rem] align-middle font-mono text-[0.72rem] [font-variant-numeric:tabular-nums] text-[rgba(245,255,249,0.62)]">
+                    {observer.reachableStakePct === undefined
+                      ? "—"
+                      : `${observer.reachableStakePct}%`}
+                  </td>
+                  <td className="border-b border-[rgba(255,255,255,0.08)] px-[0.82rem] py-[0.74rem] align-middle font-mono text-[0.72rem] [font-variant-numeric:tabular-nums] text-[rgba(245,255,249,0.62)]">
+                    <ClientCounts observer={observer} />
                   </td>
                   <td className="border-b border-[rgba(255,255,255,0.08)] px-[0.82rem] py-[0.74rem] align-middle font-mono text-[0.72rem] [font-variant-numeric:tabular-nums] text-[rgba(245,255,249,0.62)]">
                     {observer.active ? `${observer.rtt.toFixed(1)}ms` : "—"}

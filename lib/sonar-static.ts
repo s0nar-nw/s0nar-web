@@ -9,6 +9,21 @@ export const REGIONS = [
   "Other",
 ] as const;
 
+export const CLIENT_COLORS = {
+  Agave: "#2de19b",
+  Firedancer: "#60a5fa",
+  Jito: "#f59e0b",
+  Labs: "rgba(255,255,255,0.18)",
+  Other: "rgba(255,255,255,0.18)",
+  Unknown: "rgba(245,255,249,0.36)",
+} as const;
+
+export type ClientDiversityItem = {
+  name: keyof typeof CLIENT_COLORS;
+  count: number;
+  color: string;
+};
+
 export const REGION_PINS: Record<string, { cx: number; cy: number }> = {
   asia: { cx: 720, cy: 180 },
   us: { cx: 175, cy: 190 },
@@ -29,7 +44,7 @@ export const PDAS = [
   {
     name: "NetworkHealthAccount",
     seeds: '[b"network_health"]',
-    size: "205B",
+    size: "632B",
     desc: "Canonical oracle surface for CPI consumers.",
   },
   {
@@ -54,7 +69,7 @@ export const INSTRUCTIONS = [
   {
     name: "submit_attestation",
     caller: "observer daemon",
-    desc: "Publishes reachability and slot latency measurements.",
+    desc: "Publishes reachability, RTT, slot latency, client diversity, and stake-weighted reach.",
   },
   {
     name: "crank_aggregation",
@@ -75,6 +90,16 @@ export const INSTRUCTIONS = [
     name: "update_config",
     caller: "authority",
     desc: "Adjusts caps, stake threshold, and pause state.",
+  },
+  {
+    name: "propose_authority",
+    caller: "authority",
+    desc: "Starts a two-step authority handoff.",
+  },
+  {
+    name: "accept_authority",
+    caller: "new authority",
+    desc: "Accepts a pending authority handoff.",
   },
 ] as const;
 
@@ -133,6 +158,21 @@ export const NETWORK_HEALTH_FIELDS = [
     desc: "Freshness anchor for consumers.",
   },
   {
+    field: "last_updated_ts",
+    type: "i64",
+    desc: "Unix timestamp for the last aggregate update.",
+  },
+  {
+    field: "min_health_ever",
+    type: "Option<u8>",
+    desc: "Lowest global score observed since initialization.",
+  },
+  {
+    field: "max_health_ever",
+    type: "u8",
+    desc: "Highest global score observed since initialization.",
+  },
+  {
     field: "total_attestations",
     type: "u64",
     desc: "Cumulative writes from the network.",
@@ -142,6 +182,38 @@ export const NETWORK_HEALTH_FIELDS = [
     type: "[RegionScore; 7]",
     desc: "Per-region score buckets.",
   },
+  {
+    field: "agave_count",
+    type: "u16",
+    desc: "Network-wide Agave validators seen.",
+  },
+  {
+    field: "firedancer_count",
+    type: "u16",
+    desc: "Network-wide Firedancer validators seen.",
+  },
+  { field: "jito_count", type: "u16", desc: "Network-wide Jito validators seen." },
+  {
+    field: "solana_labs_count",
+    type: "u16",
+    desc: "Network-wide Solana Labs validators seen.",
+  },
+  {
+    field: "other_count",
+    type: "u16",
+    desc: "Network-wide other-client validators seen.",
+  },
+] as const;
+
+export const OBSERVER_FIELDS = [
+  { field: "authority", type: "Pubkey", desc: "Wallet authorized to report." },
+  { field: "region", type: "Region", desc: "Observer geographic region." },
+  { field: "stake_lamports", type: "u64", desc: "Registered observer stake." },
+  { field: "registered_at", type: "i64", desc: "Observer registration timestamp." },
+  { field: "last_attestation_slot", type: "u64", desc: "Most recent attestation slot." },
+  { field: "attestation_count", type: "u64", desc: "Total attestations submitted." },
+  { field: "latest_attestation", type: "Attestation", desc: "Latest network measurement payload." },
+  { field: "is_active", type: "bool", desc: "Whether the observer is active." },
 ] as const;
 
 export const EVENTS = [
@@ -167,6 +239,12 @@ export type RegionScoreView = {
   rtt: number;
   observers: number;
   stale: boolean;
+  reachableStakePct: number;
+  agaveCount: number;
+  firedancerCount: number;
+  jitoCount: number;
+  solanaLabsCount: number;
+  otherCount: number;
 };
 
 export type ObserverView = {
@@ -185,6 +263,12 @@ export type ObserverView = {
   registeredAt?: number;
   attestationCount?: number;
   recentAttestations?: AttestationHistoryItem[];
+  reachableStakePct?: number;
+  agaveCount?: number;
+  firedancerCount?: number;
+  jitoCount?: number;
+  solanaLabsCount?: number;
+  otherCount?: number;
 };
 
 export type AttestationHistoryItem = {
@@ -196,6 +280,7 @@ export type AttestationHistoryItem = {
   slot: number;
   timestamp?: number;
   signature: string;
+  reachableStakePct?: number;
 };
 
 export type SonarSnapshot = {
@@ -204,11 +289,13 @@ export type SonarSnapshot = {
   programId: string;
   history: number[];
   attestationHistory: AttestationHistoryItem[];
+  clientDiversity: ClientDiversityItem[];
   regions: RegionScoreView[];
   observers: ObserverView[];
   network: {
     score: number;
     reachability: number;
+    rtt: number;
     slotLatency: number;
     activeObservers: number;
     totalObservers: number;
@@ -217,6 +304,11 @@ export type SonarSnapshot = {
     lastUpdatedSlot: number;
     totalAttestations: number;
     updatedSeconds: number;
+    agaveCount: number;
+    firedancerCount: number;
+    jitoCount: number;
+    solanaLabsCount: number;
+    otherCount: number;
   };
   registry: {
     paused: boolean;

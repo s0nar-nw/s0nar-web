@@ -99,7 +99,7 @@ export function Panel({
   className,
 }: {
   children: React.ReactNode;
-  accent?: boolean;
+accent?: boolean;
   className?: string;
 }) {
   return (
@@ -178,7 +178,7 @@ export function StatusPill({
         "inline-flex items-center gap-[0.4rem] rounded-[12px] border px-[0.62rem] py-[0.42rem] text-[0.64rem] font-semibold uppercase tracking-[0.18em]",
         active
           ? "border-[rgba(45,225,155,0.24)] bg-[rgba(4,16,12,0.86)] text-[#2de19b]"
-          : "border-[rgba(255,255,255,0.08)] bg-[rgba(3,12,9,0.8)] text-[rgba(245,255,249,0.36)]",
+          : "border-[rgba(255,75,105,0.28)] bg-[rgba(50,8,16,0.82)] text-[#ff4b69]",
       )}
     >
       {active ? (
@@ -186,7 +186,12 @@ export function StatusPill({
           className="h-[0.38rem] w-[0.38rem] rounded-full bg-[#2de19b] shadow-[0_0_0.9rem_rgba(45,225,155,0.24)]"
           aria-hidden="true"
         />
-      ) : null}
+      ) : (
+        <span
+          className="h-[0.38rem] w-[0.38rem] rounded-full bg-[#ff4b69] shadow-[0_0_0.9rem_rgba(255,75,105,0.24)]"
+          aria-hidden="true"
+        />
+      )}
       {children}
     </span>
   );
@@ -197,7 +202,7 @@ export function Skeleton({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "animate-pulse rounded-[10px] bg-[linear-gradient(90deg,rgba(255,255,255,0.06),rgba(45,225,155,0.12),rgba(255,255,255,0.06))] bg-[length:220%_100%]",
+        "animate-pulse rounded-[10px] bg-[linear-gradient(90deg,rgba(255,255,255,0.06),rgba(45,225,155,0.12),rgba(255,255,255,0.06))] bg-size-[220%_100%]",
         className,
       )}
     />
@@ -208,13 +213,13 @@ export function PageIntroSkeleton({ title = "Loading" }: { title?: string }) {
   return (
     <section className="mb-[3.2rem] flex flex-wrap items-end justify-between gap-[2.4rem] max-[900px]:items-start">
       <div className="w-full max-w-195">
-        <Skeleton className="h-[2rem] w-[9rem] rounded-[12px]" />
-        <Skeleton className="mt-4 h-[clamp(2.1rem,4.4vw,4rem)] w-full max-w-[26rem]" />
-        <Skeleton className="mt-4 h-[0.9rem] w-full max-w-[42rem]" />
-        <Skeleton className="mt-3 h-[0.9rem] w-full max-w-[31rem]" />
+        <Skeleton className="h-8 w-36 rounded-[12px]" />
+        <Skeleton className="mt-4 h-[clamp(2.1rem,4.4vw,4rem)] w-full max-w-104" />
+        <Skeleton className="mt-4 h-[0.9rem] w-full max-w-2xl" />
+        <Skeleton className="mt-3 h-[0.9rem] w-full max-w-124" />
       </div>
       <Skeleton
-        className="h-[2rem] w-[11rem] rounded-[12px]"
+        className="h-8 w-44 rounded-[12px]"
         aria-label={title}
       />
     </section>
@@ -281,10 +286,28 @@ export function ActionLink({
   return (
     <Link
       className={cn(
-        "inline-flex min-h-[2.6rem] items-center justify-center rounded-[12px] border px-[0.9rem] text-[0.64rem] font-semibold uppercase tracking-[0.18em] transition-[transform,border-color,background-color,color,box-shadow] duration-150 ease-out hover:-translate-y-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2de19b]",
+        // Base
+        "group relative inline-flex min-h-10 items-center justify-center gap-1.5 overflow-hidden rounded-[14px] border px-4 text-[0.78rem] font-semibold tracking-[-0.01em] transition-all duration-200 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2de19b]",
+
         primary
-          ? "border-[rgba(45,225,155,0.24)] bg-[#2de19b] text-[#02110b] shadow-[0_14px_34px_rgba(45,225,155,0.14),0_0_2.4rem_rgba(45,225,155,0.12)] hover:border-[rgba(45,225,155,0.24)]"
-          : "border-[rgba(255,255,255,0.08)] bg-[rgba(3,12,9,0.82)] text-[rgba(245,255,249,1)] shadow-[0_18px_44px_rgba(0,0,0,0.24)] hover:border-[rgba(45,225,155,0.24)]",
+          ? [
+              // Primary — solid green
+              "border-[rgba(45,225,155,0.28)] bg-[#2de19b] text-[#01100a]",
+              // Layered glow: tight bloom + wide ambient
+              "shadow-[0_0_0_1px_rgba(45,225,155,0.18)_inset,0_1px_0_rgba(255,255,255,0.22)_inset,0_8px_24px_rgba(45,225,155,0.18),0_2px_8px_rgba(45,225,155,0.12)]",
+              // Hover: brighter + lift
+              "hover:bg-[#3fffa8] hover:shadow-[0_0_0_1px_rgba(45,225,155,0.22)_inset,0_1px_0_rgba(255,255,255,0.28)_inset,0_12px_32px_rgba(45,225,155,0.26),0_4px_12px_rgba(45,225,155,0.18)] hover:-translate-y-0.5",
+              // Active
+              "active:translate-y-0 active:shadow-[0_0_0_1px_rgba(45,225,155,0.16)_inset,0_4px_12px_rgba(45,225,155,0.14)]",
+            ].join(" ")
+          : [
+              "border-[rgba(255,255,255,0.09)] bg-[rgba(3,12,9,0.82)] text-[rgba(230,255,242,0.88)]",
+              "shadow-[0_0_0_1px_rgba(255,255,255,0.04)_inset,0_1px_0_rgba(255,255,255,0.06)_inset]",
+              // Hover
+              "hover:border-[rgba(45,225,155,0.22)] hover:bg-[rgba(8,28,18,0.92)] hover:text-[rgba(230,255,242,1)] hover:shadow-[0_0_0_1px_rgba(45,225,155,0.08)_inset,0_1px_0_rgba(255,255,255,0.08)_inset,0_4px_16px_rgba(45,225,155,0.06)] hover:-translate-y-0.5",
+              // Active
+              "active:translate-y-0 active:bg-[rgba(3,12,9,0.92)]",
+            ].join(" "),
       )}
       href={href}
     >

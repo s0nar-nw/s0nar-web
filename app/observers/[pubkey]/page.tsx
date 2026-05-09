@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
-  Bars,
   KeyValueList,
   MetricCard,
   PageFrame,
@@ -14,6 +13,7 @@ import {
   StatusPill,
 } from "@/components/sonar-ui";
 import { useSonarSnapshot } from "@/hooks/use-sonar-snapshot";
+import { ChevronLeft } from "lucide-react";
 
 const MIN_STAKE_SOL = 0.1;
 
@@ -24,6 +24,14 @@ function formatTime(timestamp?: number) {
     minute: "2-digit",
     second: "2-digit",
   });
+}
+
+function slotLatencyValue(value: number) {
+  return value === 0 ? (
+    <span className="text-[#2de19b]">Synced</span>
+  ) : (
+    `${value}ms`
+  );
 }
 
 export default function ObserverDetailPage() {
@@ -41,9 +49,9 @@ export default function ObserverDetailPage() {
       <PageFrame wide>
         <Link
           href="/observers"
-          className="mb-6 inline-flex text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[rgba(245,255,249,0.62)] transition-colors hover:text-[#2de19b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2de19b]"
+          className="flex items-centermb-6 inline-flex text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[rgba(245,255,249,0.62)] transition-colors hover:text-[#2de19b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2de19b]"
         >
-          Back to registry
+          <ChevronLeft className="w-4 h-4 mr-3" /> Back to registry
         </Link>
         <PageIntro
           eyebrow="Observer detail"
@@ -86,9 +94,9 @@ export default function ObserverDetailPage() {
       <PageFrame wide>
         <Link
           href="/observers"
-          className="mb-6 inline-flex text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[rgba(245,255,249,0.62)] transition-colors hover:text-[#2de19b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2de19b]"
+          className="flex items-center mb-6 inline-flex text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[rgba(245,255,249,0.62)] transition-colors hover:text-[#2de19b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2de19b]"
         >
-          Back to registry
+          <ChevronLeft className="w-4 h-4 mr-3" /> Back to registry
         </Link>
         <Panel>
           <SectionTitle>Observer not found</SectionTitle>
@@ -110,15 +118,14 @@ export default function ObserverDetailPage() {
     ? new Date(observer.registeredAt * 1000).toLocaleString()
     : registeredSlot.toLocaleString();
   const recentAttestations = observer.recentAttestations ?? [];
-  const history = recentAttestations.map((item) => item.score).reverse();
 
   return (
     <PageFrame wide>
       <Link
         href="/observers"
-        className="mb-6 inline-flex text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[rgba(245,255,249,0.62)] transition-colors hover:text-[#2de19b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2de19b]"
+        className="flex items-center mb-6 inline-flex text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[rgba(245,255,249,0.62)] transition-colors hover:text-[#2de19b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2de19b]"
       >
-        Back to registry
+        <ChevronLeft className="w-4 h-4 mr-3" /> Back to registry
       </Link>
 
       <PageIntro
@@ -134,8 +141,8 @@ export default function ObserverDetailPage() {
         }
       />
 
-      <section className="mb-[3.2rem] grid gap-4 min-[901px]:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
-        <Panel accent>
+      <section className="mb-[3.2rem] grid gap-4 min-[901px]:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)] min-[901px]:items-stretch">
+        <Panel accent className="h-full">
           <div className="grid gap-5 min-[700px]:grid-cols-[minmax(0,1fr)_auto] min-[700px]:items-start">
             <div className="min-w-0">
               <div className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[#2de19b]">
@@ -170,7 +177,7 @@ export default function ObserverDetailPage() {
             />
             <MetricCard
               label="Slot latency"
-              value={`${slotLatency}ms`}
+              value={slotLatencyValue(slotLatency)}
               hint="Below stale threshold"
             />
             <MetricCard
@@ -181,8 +188,8 @@ export default function ObserverDetailPage() {
           </div>
         </Panel>
 
-        <div className="grid content-start gap-4">
-          <Panel>
+        <div className="grid h-full gap-4 min-[901px]:grid-rows-2">
+          <Panel className="h-full">
             <SectionTitle>Identity</SectionTitle>
             <KeyValueList
               items={[
@@ -199,7 +206,7 @@ export default function ObserverDetailPage() {
             />
           </Panel>
 
-          <Panel accent>
+          <Panel accent className="h-full">
             <SectionTitle>Stake</SectionTitle>
             <div className="mt-5 text-[clamp(2rem,4vw,3.5rem)] font-semibold uppercase leading-none tracking-[-0.08em] text-[#2de19b]">
               {observer.stake}
@@ -220,18 +227,6 @@ export default function ObserverDetailPage() {
             </div>
           </Panel>
         </div>
-      </section>
-
-      <section className="mb-[3.2rem]">
-        <Panel>
-          <SectionTitle>Score history</SectionTitle>
-          <div className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[rgba(245,255,249,0.36)]">
-            Last 20 observation windows
-          </div>
-          <div className="mt-5">
-            <Bars values={history} accentIndex={history.length - 1} />
-          </div>
-        </Panel>
       </section>
 
       <section className="mb-[3.2rem]">
@@ -273,7 +268,7 @@ export default function ObserverDetailPage() {
                     {item.reachability}%
                   </td>
                   <td className="border-b border-[rgba(255,255,255,0.08)] px-[0.82rem] py-[0.74rem] font-mono text-[0.72rem] text-[rgba(245,255,249,0.62)]">
-                    {item.slotLatency}ms
+                    {slotLatencyValue(item.slotLatency)}
                   </td>
                   <td className="border-b border-[rgba(255,255,255,0.08)] px-[0.82rem] py-[0.74rem] font-mono text-[0.72rem] text-[rgba(245,255,249,0.62)]">
                     {formatTime(item.timestamp)}

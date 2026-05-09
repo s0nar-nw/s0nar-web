@@ -37,7 +37,7 @@ export function NetworkSidebar({
   return (
     <>
       {/* Registry state */}
-      <Panel className="min-h-0">
+      <Panel className="h-full min-h-0">
         <SectionTitle>Registry state</SectionTitle>
         <KeyValueList items={registryState} />
       </Panel>

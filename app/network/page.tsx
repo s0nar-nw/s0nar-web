@@ -9,8 +9,8 @@ import {
   Skeleton,
   StatusPill,
 } from "@/components/sonar-ui";
-import { ScoreMomentumPanel } from "@/components/dashboard/score-momentum-panel";
 import { NetworkSidebar } from "@/components/dashboard/network-sidebar";
+import { ClientDiversityPanel } from "@/components/dashboard/client-diversity-panel";
 import { useSonarSnapshot } from "@/hooks/use-sonar-snapshot";
 
 function shortKey(value: string) {
@@ -24,6 +24,14 @@ function formatTime(timestamp?: number) {
     minute: "2-digit",
     second: "2-digit",
   });
+}
+
+function slotLatencyValue(value: number) {
+  return value === 0 ? (
+    <span className="text-[#2de19b]">Synced</span>
+  ) : (
+    `${value}ms`
+  );
 }
 
 export default function NetworkPage() {
@@ -67,8 +75,8 @@ export default function NetworkPage() {
                   <Skeleton className="h-9 w-64" />
                   <Skeleton className="h-4 w-full max-w-xl" />
                 </div>
-                <div className="grid grid-cols-[repeat(auto-fit,minmax(10.5rem,1fr))] gap-3 border-t border-[rgba(255,255,255,0.08)] pt-5">
-                  {Array.from({ length: 3 }).map((_, index) => (
+                <div className="grid grid-cols-1 gap-3 border-t border-[rgba(255,255,255,0.08)] pt-5 sm:grid-cols-2 xl:grid-cols-4">
+                  {Array.from({ length: 4 }).map((_, index) => (
                     <Skeleton
                       key={index}
                       className="h-[5.2rem] rounded-[12px]"
@@ -93,13 +101,28 @@ export default function NetworkPage() {
     );
   }
 
-  const { network, registry, regions, history, attestationHistory } = snapshot;
+  const { network, registry, regions, attestationHistory } = snapshot;
   const updatedSeconds =
     networkUpdatedSeconds +
     (now > snapshotFetchedAt
       ? Math.floor((now - snapshotFetchedAt) / 1000)
       : 0);
-  const activeRegionCount = network.activeRegions;
+  const activeRegions = regions.filter((region) => !region.stale);
+  const activeRegionCount = activeRegions.length;
+  const avgStakeReach = Math.round(
+    activeRegions.reduce((sum, region) => sum + region.reachableStakePct, 0) /
+      Math.max(activeRegions.length, 1),
+  );
+  const totalClients =
+    network.agaveCount +
+    network.firedancerCount +
+    network.jitoCount +
+    network.solanaLabsCount +
+    network.otherCount;
+  const agavePct =
+    totalClients > 0
+      ? Math.round((network.agaveCount / totalClients) * 100)
+      : 0;
   const networkMetrics = [
     {
       label: "Reachability",
@@ -107,14 +130,29 @@ export default function NetworkPage() {
       hint: "Median active observers",
     },
     {
+      label: "Avg RTT",
+      value: `${network.rtt}ms`,
+      hint: "Primary latency signal",
+    },
+    {
       label: "Slot latency",
-      value: `${network.slotLatency}ms`,
-      hint: "400ms stale ceiling",
+      value: slotLatencyValue(network.slotLatency),
+      hint: "Slot propagation",
     },
     {
       label: "Quorum",
       value: `${network.activeObservers} / ${network.totalObservers}`,
       hint: "Active observers",
+    },
+    {
+      label: "Stake Reach",
+      value: `${avgStakeReach}%`,
+      hint: "% of cluster stake reachable",
+    },
+    {
+      label: "Agave Share",
+      value: `${agavePct}%`,
+      hint: "Validators running Agave client",
     },
   ] as const;
 
@@ -160,7 +198,7 @@ export default function NetworkPage() {
                 </StatusPill>
               </div>
 
-              <div className="grid grid-cols-[repeat(auto-fit,minmax(10.5rem,1fr))] gap-3 border-t border-[rgba(255,255,255,0.08)] pt-5">
+              <div className="grid grid-cols-1 gap-3 border-t border-[rgba(255,255,255,0.08)] pt-5 sm:grid-cols-2 xl:grid-cols-3">
                 {networkMetrics.map(({ label, value, hint }) => (
                   <div
                     key={label}
@@ -183,41 +221,39 @@ export default function NetworkPage() {
         </Panel>
       </section>
 
-      <section className="grid gap-6 min-[901px]:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.82fr)]">
-        <div className="grid gap-5">
-          <ScoreMomentumPanel score={network.score} history={[...history]} />
-        </div>
+      <section className="mb-6">
+        <ClientDiversityPanel clients={snapshot.clientDiversity} />
+      </section>
 
-        <div className="grid gap-5 content-start">
-          <Panel>
-            <SectionTitle>Oracle state</SectionTitle>
-            <div className="grid gap-4">
-              <div>
-                <div className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[rgba(245,255,249,0.36)]">
-                  Attestations
-                </div>
-                <div className="mt-2 text-[clamp(1.65rem,3vw,2.35rem)] font-semibold leading-none tracking-[-0.06em] text-[#2de19b] [font-variant-numeric:tabular-nums]">
-                  {network.totalAttestations.toLocaleString()}
-                </div>
+      <section className="grid gap-6 min-[901px]:grid-cols-[minmax(0,1fr)_minmax(18rem,0.42fr)]">
+        <NetworkSidebar
+          activeRegions={activeRegionCount}
+          totalRegions={regions.length}
+          observerCap={registry.observerCap}
+          minStakeSol={registry.minStakeSol}
+          paused={registry.paused}
+        />
+        <Panel className="flex h-full flex-col">
+          <SectionTitle>Oracle state</SectionTitle>
+          <div className="grid flex-1 gap-4">
+            <div className="flex min-h-[6.5rem] flex-col justify-between rounded-[12px] border border-[rgba(255,255,255,0.06)] bg-black/25 p-4">
+              <div className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[rgba(245,255,249,0.36)]">
+                Attestations
               </div>
-              <div className="rounded-[12px] border border-[rgba(255,255,255,0.06)] bg-black/25 p-4">
-                <div className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[rgba(245,255,249,0.36)]">
-                  Current slot
-                </div>
-                <div className="mt-2 font-mono text-[0.95rem] text-[rgba(245,255,249,0.78)]">
-                  {network.lastUpdatedSlot.toLocaleString()}
-                </div>
+              <div className="mt-2 text-[clamp(1.65rem,3vw,2.35rem)] font-semibold leading-none tracking-[-0.06em] text-[#2de19b] [font-variant-numeric:tabular-nums]">
+                {network.totalAttestations.toLocaleString()}
               </div>
             </div>
-          </Panel>
-          <NetworkSidebar
-            activeRegions={activeRegionCount}
-            totalRegions={regions.length}
-            observerCap={registry.observerCap}
-            minStakeSol={registry.minStakeSol}
-            paused={registry.paused}
-          />
-        </div>
+            <div className="flex min-h-[6.5rem] flex-col justify-between rounded-[12px] border border-[rgba(255,255,255,0.06)] bg-black/25 p-4">
+              <div className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[rgba(245,255,249,0.36)]">
+                Current slot
+              </div>
+              <div className="mt-2 font-mono text-[0.95rem] text-[rgba(245,255,249,0.78)]">
+                {network.lastUpdatedSlot.toLocaleString()}
+              </div>
+            </div>
+          </div>
+        </Panel>
       </section>
 
       <section className="mt-[3.2rem]">
@@ -271,7 +307,7 @@ export default function NetworkPage() {
                     {item.reachability}%
                   </td>
                   <td className="border-b border-[rgba(255,255,255,0.08)] px-[0.82rem] py-[0.74rem] font-mono text-[0.72rem] text-[rgba(245,255,249,0.62)]">
-                    {item.slotLatency}ms
+                    {slotLatencyValue(item.slotLatency)}
                   </td>
                   <td className="border-b border-[rgba(255,255,255,0.08)] px-[0.82rem] py-[0.74rem] font-mono text-[0.72rem] text-[rgba(245,255,249,0.62)]">
                     {formatTime(item.timestamp)}

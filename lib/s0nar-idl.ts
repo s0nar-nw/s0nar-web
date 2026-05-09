@@ -1,5 +1,5 @@
 export const idl = {
-  address: "9eqgnuLZP5vMnxU27vZVcrhoSkf3PhhVECRKbb8P8fNQ",
+  address: "DcVVV9W4CtitVvRD7Jf8ptG24Lh9qte4g6tUkwu4t16a",
   metadata: {
     name: "s0nar_program",
     version: "0.1.0",
@@ -376,6 +376,30 @@ export const idl = {
           name: "slot_latency_ms",
           type: "u32",
         },
+        {
+          name: "agave_count",
+          type: "u16",
+        },
+        {
+          name: "firedancer_count",
+          type: "u16",
+        },
+        {
+          name: "jito_count",
+          type: "u16",
+        },
+        {
+          name: "solana_labs_count",
+          type: "u16",
+        },
+        {
+          name: "other_count",
+          type: "u16",
+        },
+        {
+          name: "reachable_stake_pct",
+          type: "u8",
+        },
       ],
     },
     {
@@ -602,6 +626,32 @@ export const idl = {
             docs: ["Total validators probed this round"],
             type: "u16",
           },
+          {
+            name: "agave_count",
+            docs: ["Client distributions"],
+            type: "u16",
+          },
+          {
+            name: "firedancer_count",
+            type: "u16",
+          },
+          {
+            name: "jito_count",
+            type: "u16",
+          },
+          {
+            name: "solana_labs_count",
+            type: "u16",
+          },
+          {
+            name: "other_count",
+            type: "u16",
+          },
+          {
+            name: "reachable_stake_pct",
+            docs: ["% of total stake (by lamports) reachable via QUIC probe"],
+            type: "u8",
+          },
         ],
       },
     },
@@ -637,6 +687,30 @@ export const idl = {
           {
             name: "slot",
             type: "u64",
+          },
+          {
+            name: "agave_count",
+            type: "u16",
+          },
+          {
+            name: "firedancer_count",
+            type: "u16",
+          },
+          {
+            name: "jito_count",
+            type: "u16",
+          },
+          {
+            name: "solana_labs_count",
+            type: "u16",
+          },
+          {
+            name: "other_count",
+            type: "u16",
+          },
+          {
+            name: "reachable_stake_pct",
+            type: "u8",
           },
         ],
       },
@@ -741,6 +815,26 @@ export const idl = {
                 7,
               ],
             },
+          },
+          {
+            name: "agave_pct",
+            type: "u8",
+          },
+          {
+            name: "firedancer_pct",
+            type: "u8",
+          },
+          {
+            name: "jito_pct",
+            type: "u8",
+          },
+          {
+            name: "solana_labs_pct",
+            type: "u8",
+          },
+          {
+            name: "other_pct",
+            type: "u8",
           },
           {
             name: "bump",
@@ -980,6 +1074,57 @@ export const idl = {
             ],
             type: "u64",
           },
+          {
+            name: "agave_count",
+            docs: ["Client distribution counts for this region"],
+            type: "u16",
+          },
+          {
+            name: "firedancer_count",
+            type: "u16",
+          },
+          {
+            name: "jito_count",
+            type: "u16",
+          },
+          {
+            name: "solana_labs_count",
+            type: "u16",
+          },
+          {
+            name: "other_count",
+            type: "u16",
+          },
+          {
+            name: "total_agave_count",
+            docs: ["Running totals"],
+            type: "u32",
+          },
+          {
+            name: "total_firedancer_count",
+            type: "u32",
+          },
+          {
+            name: "total_jito_count",
+            type: "u32",
+          },
+          {
+            name: "total_solana_labs_count",
+            type: "u32",
+          },
+          {
+            name: "total_other_count",
+            type: "u32",
+          },
+          {
+            name: "reachable_stake_pct",
+            docs: ["Stake-weighted reachability for this region"],
+            type: "u8",
+          },
+          {
+            name: "total_reachable_stake_pct",
+            type: "u32",
+          },
         ],
       },
     },
@@ -1055,8 +1200,14 @@ export const idl = {
  * Note that this is only a type helper and is not the actual IDL. The original
  * IDL can be found at `target/idl/s0nar_program.json`.
  */
+/**
+ * Program IDL in camelCase format in order to be used in JS/TS.
+ *
+ * Note that this is only a type helper and is not the actual IDL. The original
+ * IDL can be found at `target/idl/s0nar_program.json`.
+ */
 export type S0narProgram = {
-  address: "9eqgnuLZP5vMnxU27vZVcrhoSkf3PhhVECRKbb8P8fNQ";
+  address: "DcVVV9W4CtitVvRD7Jf8ptG24Lh9qte4g6tUkwu4t16a";
   metadata: {
     name: "s0narProgram";
     version: "0.1.0";
@@ -1469,6 +1620,30 @@ export type S0narProgram = {
           name: "slotLatencyMs";
           type: "u32";
         },
+        {
+          name: "agaveCount";
+          type: "u16";
+        },
+        {
+          name: "firedancerCount";
+          type: "u16";
+        },
+        {
+          name: "jitoCount";
+          type: "u16";
+        },
+        {
+          name: "solanaLabsCount";
+          type: "u16";
+        },
+        {
+          name: "otherCount";
+          type: "u16";
+        },
+        {
+          name: "reachableStakePct";
+          type: "u8";
+        },
       ];
     },
     {
@@ -1695,6 +1870,32 @@ export type S0narProgram = {
             docs: ["Total validators probed this round"];
             type: "u16";
           },
+          {
+            name: "agaveCount";
+            docs: ["Client distributions"];
+            type: "u16";
+          },
+          {
+            name: "firedancerCount";
+            type: "u16";
+          },
+          {
+            name: "jitoCount";
+            type: "u16";
+          },
+          {
+            name: "solanaLabsCount";
+            type: "u16";
+          },
+          {
+            name: "otherCount";
+            type: "u16";
+          },
+          {
+            name: "reachableStakePct";
+            docs: ["% of total stake (by lamports) reachable via QUIC probe"];
+            type: "u8";
+          },
         ];
       };
     },
@@ -1730,6 +1931,30 @@ export type S0narProgram = {
           {
             name: "slot";
             type: "u64";
+          },
+          {
+            name: "agaveCount";
+            type: "u16";
+          },
+          {
+            name: "firedancerCount";
+            type: "u16";
+          },
+          {
+            name: "jitoCount";
+            type: "u16";
+          },
+          {
+            name: "solanaLabsCount";
+            type: "u16";
+          },
+          {
+            name: "otherCount";
+            type: "u16";
+          },
+          {
+            name: "reachableStakePct";
+            type: "u8";
           },
         ];
       };
@@ -1834,6 +2059,26 @@ export type S0narProgram = {
                 7,
               ];
             };
+          },
+          {
+            name: "agavePct";
+            type: "u8";
+          },
+          {
+            name: "firedancerPct";
+            type: "u8";
+          },
+          {
+            name: "jitoPct";
+            type: "u8";
+          },
+          {
+            name: "solanaLabsPct";
+            type: "u8";
+          },
+          {
+            name: "otherPct";
+            type: "u8";
           },
           {
             name: "bump";
@@ -2072,6 +2317,57 @@ export type S0narProgram = {
               "Running total of slot latency values for observers in this region",
             ];
             type: "u64";
+          },
+          {
+            name: "agaveCount";
+            docs: ["Client distribution counts for this region"];
+            type: "u16";
+          },
+          {
+            name: "firedancerCount";
+            type: "u16";
+          },
+          {
+            name: "jitoCount";
+            type: "u16";
+          },
+          {
+            name: "solanaLabsCount";
+            type: "u16";
+          },
+          {
+            name: "otherCount";
+            type: "u16";
+          },
+          {
+            name: "totalAgaveCount";
+            docs: ["Running totals"];
+            type: "u32";
+          },
+          {
+            name: "totalFiredancerCount";
+            type: "u32";
+          },
+          {
+            name: "totalJitoCount";
+            type: "u32";
+          },
+          {
+            name: "totalSolanaLabsCount";
+            type: "u32";
+          },
+          {
+            name: "totalOtherCount";
+            type: "u32";
+          },
+          {
+            name: "reachableStakePct";
+            docs: ["Stake-weighted reachability for this region"];
+            type: "u8";
+          },
+          {
+            name: "totalReachableStakePct";
+            type: "u32";
           },
         ];
       };

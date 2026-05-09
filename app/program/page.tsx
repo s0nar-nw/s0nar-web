@@ -14,6 +14,7 @@ import {
   EVENTS,
   INSTRUCTIONS,
   NETWORK_HEALTH_FIELDS,
+  OBSERVER_FIELDS,
   PDAS,
   REGISTRY_FIELDS,
 } from "@/lib/sonar-static";
@@ -22,6 +23,7 @@ import { idl } from "@/lib/s0nar-idl";
 const SCHEMAS = [
   { name: "NetworkHealthAccount", fields: NETWORK_HEALTH_FIELDS },
   { name: "RegistryAccount", fields: REGISTRY_FIELDS },
+  { name: "ObserverAccount", fields: OBSERVER_FIELDS },
 ] as const;
 
 // Shared table cell classes

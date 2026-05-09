@@ -7,6 +7,11 @@ interface RegionCardProps {
   reachability: number;
   latency: number;
   stale: boolean;
+  reachableStakePct?: number;
+  agaveCount?: number;
+  firedancerCount?: number;
+  jitoCount?: number;
+  otherCount?: number;
   onClick?: () => void;
   selected?: boolean;
 }
@@ -17,9 +22,20 @@ export function RegionCard({
   reachability,
   latency,
   stale,
+  reachableStakePct = 0,
+  agaveCount = 0,
+  firedancerCount = 0,
+  jitoCount = 0,
+  otherCount = 0,
   onClick,
   selected,
 }: RegionCardProps) {
+  const total = agaveCount + firedancerCount + jitoCount + otherCount;
+  const agavePct = total > 0 ? (agaveCount / total) * 100 : 0;
+  const firedancerPct = total > 0 ? (firedancerCount / total) * 100 : 0;
+  const jitoPct = total > 0 ? (jitoCount / total) * 100 : 0;
+  const otherPct = total > 0 ? (otherCount / total) * 100 : 0;
+
   const inner = (
     <>
       {/* header */}
@@ -29,7 +45,7 @@ export function RegionCard({
             {name}
           </div>
           <div className="mt-[0.45rem] text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[rgba(245,255,249,0.36)]">
-            {stale ? "Excluded / stale" : `${latency}ms slot latency`}
+            {stale ? "Excluded / stale" : latency === 0 ? "Synced ✓" : `${latency}ms slot lag`}
           </div>
         </div>
         <div className="shrink-0 text-[2.2rem] font-semibold leading-[0.9] tracking-[-0.08em] text-[#2de19b]">
@@ -47,6 +63,36 @@ export function RegionCard({
           style={{ width: stale ? "0%" : `${reachability}%` }}
         />
       </div>
+
+      <div className="mt-3 flex justify-between text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[rgba(245,255,249,0.36)]">
+        <span>Stake reach</span>
+        <span>{stale ? "—" : `${reachableStakePct}%`}</span>
+      </div>
+      <div className="mt-1.5 h-[0.38rem] overflow-hidden rounded-full bg-[rgba(255,255,255,0.05)]">
+        <div
+          className="h-full rounded-[inherit] bg-[linear-gradient(90deg,rgba(45,225,155,0.35),rgba(45,225,155,0.7))]"
+          style={{ width: stale ? "0%" : `${reachableStakePct}%` }}
+        />
+      </div>
+
+      {!stale && total > 0 ? (
+        <div className="mt-3">
+          <div className="mb-1.5 text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[rgba(245,255,249,0.36)]">
+            Client mix
+          </div>
+          <div className="flex h-[0.38rem] gap-px overflow-hidden rounded-full">
+            <div style={{ width: `${agavePct}%` }} className="bg-[#2de19b]" />
+            <div style={{ width: `${firedancerPct}%` }} className="bg-[#60a5fa]" />
+            <div style={{ width: `${jitoPct}%` }} className="bg-[#f59e0b]" />
+            <div style={{ width: `${otherPct}%` }} className="bg-[rgba(255,255,255,0.18)]" />
+          </div>
+          <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[0.55rem] font-semibold uppercase tracking-[0.14em] text-[rgba(245,255,249,0.36)]">
+            <span><span className="text-[#2de19b]">●</span> Agave {agaveCount}</span>
+            {firedancerCount > 0 ? <span><span className="text-[#60a5fa]">●</span> FD {firedancerCount}</span> : null}
+            {jitoCount > 0 ? <span><span className="text-[#f59e0b]">●</span> Jito {jitoCount}</span> : null}
+          </div>
+        </div>
+      ) : null}
     </>
   );
 
@@ -57,7 +103,7 @@ export function RegionCard({
         onClick={onClick}
         className={cn(
           // mirror Panel base styles
-          "relative min-h-[9.8rem] overflow-hidden rounded-[16px] border p-[1.15rem] text-left backdrop-blur-[18px]",
+          "relative min-h-[12.8rem] overflow-hidden rounded-[16px] border p-[1.15rem] text-left backdrop-blur-[18px]",
           "bg-[linear-gradient(180deg,rgba(4,14,10,0.9),rgba(0,0,0,0.94))] shadow-[0_24px_60px_rgba(0,0,0,0.28)]",
           "before:pointer-events-none before:absolute before:inset-0 before:bg-[linear-gradient(135deg,rgba(45,225,155,0.08),transparent_34%),linear-gradient(180deg,rgba(45,225,155,0.02),transparent_44%)] before:opacity-50",
           "after:pointer-events-none after:absolute after:inset-px after:rounded-[inherit] after:border-t after:border-white/5",
@@ -76,7 +122,7 @@ export function RegionCard({
   return (
     <Panel
       className={cn(
-        "min-h-[9.8rem] p-[1.15rem]",
+        "min-h-[12.8rem] p-[1.15rem]",
         stale && "opacity-50",
         selected && "border-[rgba(45,225,155,0.24)]",
       )}

@@ -97,7 +97,26 @@
 }
 
 html {
+    overflow-y: scroll;
     scroll-behavior: smooth;
+    scrollbar-gutter: stable;
+    scrollbar-width: none;
+}
+
+* {
+    scrollbar-width: none;
+}
+
+*::-webkit-scrollbar {
+    display: none;
+}
+
+.scrollbar-none {
+    scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+    display: none;
 }
 
 body {
@@ -123,6 +142,48 @@ body {
         BlinkMacSystemFont,
         "Segoe UI",
         sans-serif;
+}
+
+.feature-glow-card {
+    --angle: 0deg;
+    --spread: 82;
+    --blur: 22;
+    --glow-color: rgba(45, 225, 155, 0.95);
+}
+
+.feature-glow-card .glow-container {
+    position: absolute;
+    inset: -2px;
+    z-index: 1;
+    filter: blur(calc(var(--blur) * 1px));
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.feature-glow-card:hover .glow-container {
+    opacity: 1;
+}
+
+.feature-glow-card .glow {
+    position: absolute;
+    inset: 0;
+    padding: 2px;
+    border-radius: inherit;
+    background: conic-gradient(
+        from calc(var(--angle) - (var(--spread) * 0.5) * 1deg),
+        transparent 0deg,
+        var(--glow-color) 1deg,
+        transparent calc(var(--spread) * 1deg)
+    );
+    mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
 }
 
 @media (prefers-reduced-motion: reduce) {
