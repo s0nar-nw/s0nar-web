@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/sonar-logo.svg" alt="s0nar" width="64" height="64" />
+  <img src="public/logo.svg" alt="s0nar" width="320" />
 </p>
 
 <h1 align="center">s0nar-web</h1>
@@ -24,7 +24,8 @@
 - **Health Score** — A 0–100 global score derived from reachability (70%) and latency (30%).
 - **Regional Breakdown** — Per-region scores for Asia, US, EU, South America, Africa, and Oceania.
 - **Client Diversity** — Tracks validator client distribution (Agave, Firedancer, Jito, Solana Labs, Other).
-- **Observer Network** — Live view of observer nodes, their stakes, attestation history, and activity.
+- **Observer Network** — Live view of observer nodes, stakes, last-known health, attestation history, and activity.
+- **Stable Attestation History** — Latest 10 attestations are served from a merged server-side history cache so partial RPC refreshes do not shrink the table.
 - **On-chain State** — Every metric is sourced from the same oracle accounts that protocols can inspect directly.
 
 ## Pages
@@ -35,7 +36,7 @@
 | `/network` | Live network overview — global health, regional scores, client diversity, attestation history |
 | `/dashboard` | Detailed dashboard with observer breakdown and network metrics |
 | `/observers` | Observer list with per-observer drill-down (`/observers/[pubkey]`) |
-| `/regions` | Regional health cards |
+| `/regions` | Regional coverage map, last-known region fallback, and latest attested region |
 | `/program` | On-chain program state explorer |
 | `/docs` | SDK documentation with syntax-highlighted code examples |
 
@@ -76,17 +77,17 @@ The app will be available at [http://localhost:3000](http://localhost:3000).
 
 | Variable | Default | Description |
 |---|---|---|
-| `SOLANA_RPC_URL` | `https://api.devnet.solana.com` | Solana RPC endpoint |
+| `SOLANA_RPC_URL` | `https://api.devnet.solana.com` | Server-only Solana RPC endpoint. Use this for paid RPC keys. |
 | `S0NAR_PROGRAM_ID` | s0nar devnet program ID | Override the on-chain program address |
 
-> Both variables also support `NEXT_PUBLIC_` prefixes for client-side access.
+Do not put paid RPC keys in `NEXT_PUBLIC_*` variables. The browser only calls `/api/sonar`; RPC credentials should stay server-side.
 
 ## Architecture
 
 ```
 s0nar-web/
 ├── app/
-│   ├── api/sonar/          # Server-side RPC proxy with 10s TTL cache
+│   ├── api/sonar/          # Server-side RPC proxy with snapshot + history cache
 │   ├── dashboard/          # Dashboard page
 │   ├── docs/               # SDK documentation
 │   ├── network/            # Network overview
@@ -106,15 +107,17 @@ s0nar-web/
 ├── lib/
 │   ├── s0nar-idl.ts        # Program IDL
 │   ├── sonar-static.ts     # Type definitions & constants
+│   ├── time-format.ts      # Relative freshness formatting
 │   └── utils.ts            # Utility helpers
 └── public/                 # Static assets (logos, globe data)
 ```
 
 ### Data Flow
 
-1. **`/api/sonar`** — A Next.js API route that reads on-chain accounts via `s0nar-sdk`, fetches attestation history from transaction logs, and returns a cached `SonarSnapshot`.
-2. **`useSonarSnapshot`** — A client-side hook that polls the API and provides the snapshot to dashboard pages.
-3. **Components** — Render the snapshot data as health scores, region cards, attestation tables, and client diversity charts.
+1. **`/api/sonar`** — Reads on-chain accounts via `s0nar-sdk`, fetches attestation events from transaction logs, merges them with a server-side history cache, and returns a cached `SonarSnapshot`.
+2. **Attestation history cache** — Keeps a stable internal history window, deduped by observer and slot. The public snapshot exposes the latest 10 rows.
+3. **`useSonarSnapshot`** — Polls `/api/sonar` every few seconds and keeps the current snapshot while refreshes are in flight.
+4. **Components** — Render last-known network, region, observer, attestation, and client-diversity data with stale/inactive states called out explicitly.
 
 ## Scripts
 
