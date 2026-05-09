@@ -10,7 +10,7 @@ import {
   RadioTower,
   Server,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Bars,
   KeyValueList,
@@ -20,9 +20,11 @@ import {
   Skeleton,
   StatusPill,
 } from "@/components/sonar-ui";
+import { RegionCard } from "@/components/dashboard/region-card";
 import { REGION_PINS, REGIONS, type ObserverView, type RegionScoreView } from "@/lib/sonar-static";
 import { useSonarSnapshot } from "@/hooks/use-sonar-snapshot";
 import { cn } from "@/lib/utils";
+import { formatRelativeAge } from "@/lib/time-format";
 
 type DashboardTab = "network" | "observers" | "regions";
 type StatusFilter = "all" | "active" | "inactive";
@@ -245,12 +247,21 @@ function LoadingDashboard() {
   );
 }
 
-function NetworkView({ snapshot }: { snapshot: NonNullable<ReturnType<typeof useSonarSnapshot>["snapshot"]> }) {
+function NetworkView({
+  snapshot,
+  loading,
+}: {
+  snapshot: NonNullable<ReturnType<typeof useSonarSnapshot>["snapshot"]>;
+  loading: boolean;
+}) {
   const { network, registry, regions, attestationHistory } = snapshot;
   const activeRegions = regions.filter((region) => !region.stale);
   const activeRegionCount = activeRegions.length;
+  const hasActiveRegions = activeRegionCount > 0;
+  const regionsForFallback = hasActiveRegions ? activeRegions : regions;
   const avgStakeReach = Math.round(
-    activeRegions.reduce((sum, region) => sum + region.reachableStakePct, 0) / Math.max(activeRegions.length, 1),
+    regionsForFallback.reduce((sum, region) => sum + region.reachableStakePct, 0) /
+      Math.max(regionsForFallback.length, 1),
   );
   const totalClients =
     network.agaveCount + network.firedancerCount + network.jitoCount + network.solanaLabsCount + network.otherCount;
@@ -292,7 +303,7 @@ function NetworkView({ snapshot }: { snapshot: NonNullable<ReturnType<typeof use
                   Active regions are inside the healthy band, with stale buckets excluded from aggregation.
                 </p>
               </div>
-              <StatusPill active>{activeRegionCount} active regions</StatusPill>
+              <StatusPill active={hasActiveRegions}>{activeRegionCount} active regions</StatusPill>
             </div>
 
             <div className="grid grid-cols-1 gap-3 border-t border-[rgba(255,255,255,0.08)] pt-5 sm:grid-cols-2 xl:grid-cols-3">
@@ -323,13 +334,13 @@ function NetworkView({ snapshot }: { snapshot: NonNullable<ReturnType<typeof use
         <SectionTitle
           action={
             <span className="whitespace-nowrap text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[rgba(245,255,249,0.36)]">
-              {attestationHistory.length} latest events
+              {loading && attestationHistory.length === 0 ? "Loading events" : `${attestationHistory.length} latest events`}
             </span>
           }
         >
           Attestation history
         </SectionTitle>
-        <AttestationTable events={attestationHistory} />
+        <AttestationTable events={attestationHistory} loading={loading} />
       </section>
     </div>
   );
@@ -337,8 +348,10 @@ function NetworkView({ snapshot }: { snapshot: NonNullable<ReturnType<typeof use
 
 function AttestationTable({
   events,
+  loading = false,
 }: {
   events: NonNullable<ReturnType<typeof useSonarSnapshot>["snapshot"]>["attestationHistory"];
+  loading?: boolean;
 }) {
   return (
     <div className="relative overflow-auto rounded-[16px] border border-[rgba(255,255,255,0.06)] bg-[linear-gradient(180deg,rgba(4,14,10,0.9),rgba(0,0,0,0.94))]">
@@ -383,7 +396,13 @@ function AttestationTable({
           ))}
         </tbody>
       </table>
-      {events.length === 0 ? (
+      {loading && events.length === 0 ? (
+        <div className="grid gap-2 p-4">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <Skeleton key={index} className="h-9 rounded-[10px]" />
+          ))}
+        </div>
+      ) : events.length === 0 ? (
         <div className="p-4 text-[0.72rem] text-[rgba(245,255,249,0.62)]">No recent attestation events found.</div>
       ) : null}
     </div>
@@ -730,6 +749,11 @@ function CoverageMap({
         {regions.map((region) => {
           const pin = REGION_PINS[region.id];
           const active = selected === region.id;
+          const hasReport =
+            region.lastUpdatedSlot > 0 ||
+            region.score > 0 ||
+            region.reachability > 0 ||
+            region.agaveCount + region.firedancerCount + region.jitoCount + region.solanaLabsCount + region.otherCount > 0;
           if (!pin) return null;
 
           return (
@@ -741,8 +765,8 @@ function CoverageMap({
                 cx={pin.cx}
                 cy={pin.cy}
                 r={active ? 9 : 7}
-                fill={region.stale ? "rgba(255,255,255,0.22)" : "#2DE19B"}
-                opacity={region.stale ? 0.5 : 1}
+                fill={!hasReport ? "#050505" : region.stale ? "rgba(255,255,255,0.22)" : "#2DE19B"}
+                opacity={region.stale ? 0.65 : 1}
               />
               <text x={pin.cx} y={pin.cy + (labelOffsets[region.id] ?? -18)} textAnchor="middle" style={{ fill: "rgba(255,255,255,0.52)", fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase" }}>
                 {region.name}
@@ -764,9 +788,24 @@ function RegionsView({ snapshot }: { snapshot: NonNullable<ReturnType<typeof use
   const [selected, setSelected] = useState<string | null>("asia");
   const { regions } = snapshot;
   const activeRegions = regions.filter((region) => !region.stale);
+  const hasActiveRegions = activeRegions.length > 0;
+  const latestRegion =
+    [...regions]
+      .filter((region) => region.lastAttestation || region.lastUpdatedSlot > 0)
+      .sort(
+        (a, b) =>
+          (b.lastAttestation?.timestamp ?? 0) -
+            (a.lastAttestation?.timestamp ?? 0) ||
+          b.lastUpdatedSlot - a.lastUpdatedSlot,
+      )[0] ?? activeRegions[0] ?? regions[0];
   const current = regions.find((region) => region.id === selected) ?? activeRegions[0] ?? regions[0];
   const currentOtherClients = current.otherCount + current.solanaLabsCount;
   const currentClientTotal = current.agaveCount + current.firedancerCount + current.jitoCount + currentOtherClients;
+  const currentHasReport =
+    current.lastUpdatedSlot > 0 ||
+    current.score > 0 ||
+    current.reachability > 0 ||
+    currentClientTotal > 0;
 
   return (
     <div className="grid gap-6">
@@ -783,28 +822,89 @@ function RegionsView({ snapshot }: { snapshot: NonNullable<ReturnType<typeof use
                 {current.name}
               </h3>
               <p className="mt-[0.95rem] max-w-lg text-[0.76rem] leading-[1.6] text-[rgba(245,255,249,0.62)]">
-                {current.stale
-                  ? "This bucket is currently excluded from the global score."
+                {!currentHasReport
+                  ? "This region has not even started reporting yet."
+                  : current.stale
+                  ? "Showing the last known report while this bucket is excluded from the global score."
                   : `${current.observers} active observers continue to publish attestations for this zone.`}
               </p>
+              {current.lastUpdatedSeconds !== undefined ? (
+                <p className="mt-2 text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[rgba(245,255,249,0.36)]">
+                  Last updated {formatRelativeAge(current.lastUpdatedSeconds)}
+                </p>
+              ) : null}
             </div>
-            {current.stale ? <StatusPill>Excluded</StatusPill> : <StatusPill active>Included</StatusPill>}
+            {!currentHasReport ? (
+              <StatusPill tone="neutral">Not even started</StatusPill>
+            ) : current.stale ? (
+              <StatusPill>Excluded</StatusPill>
+            ) : (
+              <StatusPill active={hasActiveRegions}>Included</StatusPill>
+            )}
           </div>
 
-          <div className="mt-[1.45rem] grid gap-4 grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
-            <MetricCard label="Health" value={current.stale ? "-" : current.score} accent />
-            <MetricCard label="Reachability" value={current.stale ? "-" : `${current.reachability}%`} />
-            <MetricCard label="Stake reach" value={current.stale ? "-" : `${current.reachableStakePct}%`} />
-            <MetricCard label="Avg RTT" value={current.stale ? "-" : `${current.rtt}ms`} />
-            <MetricCard label="Slot latency" value={current.stale ? "-" : slotLatencyValue(current.latency)} />
-            <MetricCard
-              label="Client mix"
-              value={current.stale ? "-" : currentClientTotal.toLocaleString()}
-              hint={`Agave ${current.agaveCount} / FD ${current.firedancerCount} / Jito ${current.jitoCount}`}
-            />
-          </div>
+          {currentHasReport ? (
+            <div className="mt-[1.45rem] grid gap-4 grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
+              <MetricCard label="Health" value={current.score} accent />
+              <MetricCard label="Reachability" value={`${current.reachability}%`} />
+              <MetricCard label="Stake reach" value={`${current.reachableStakePct}%`} />
+              <MetricCard label="Avg RTT" value={current.rtt > 0 ? `${current.rtt}ms` : "-"} />
+              <MetricCard label="Slot latency" value={slotLatencyValue(current.latency)} />
+              <MetricCard
+                label="Client mix"
+                value={currentClientTotal.toLocaleString()}
+                hint={`Agave ${current.agaveCount} / FD ${current.firedancerCount} / Jito ${current.jitoCount}`}
+              />
+            </div>
+          ) : (
+            <div className="mt-[1.45rem] rounded-[16px] border border-[rgba(255,255,255,0.06)] bg-black/40 p-4 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[rgba(245,255,249,0.46)]">
+              No attestation data exists for this region yet.
+            </div>
+          )}
         </Panel>
       </section>
+
+      {latestRegion ? (
+        <section className="grid gap-4 min-[901px]:grid-cols-[minmax(16rem,0.48fr)_minmax(0,1fr)]">
+          <RegionCard
+            name={latestRegion.name}
+            score={latestRegion.score}
+            reachability={latestRegion.reachability}
+            latency={latestRegion.latency}
+            stale={latestRegion.stale}
+            reachableStakePct={latestRegion.reachableStakePct}
+            agaveCount={latestRegion.agaveCount}
+            firedancerCount={latestRegion.firedancerCount}
+            jitoCount={latestRegion.jitoCount}
+            otherCount={latestRegion.otherCount + latestRegion.solanaLabsCount}
+            selected
+            onClick={() => setSelected(latestRegion.id)}
+          />
+          <Panel>
+            <SectionTitle>Last attested region</SectionTitle>
+            <KeyValueList
+              items={[
+                { label: "Region", value: latestRegion.name },
+                {
+                  label: "Freshness",
+                  value:
+                    latestRegion.lastUpdatedSeconds === undefined
+                      ? "Last known"
+                      : formatRelativeAge(latestRegion.lastUpdatedSeconds),
+                },
+                { label: "Last slot", value: latestRegion.lastUpdatedSlot.toLocaleString() },
+                {
+                  label: "Observer",
+                  value:
+                    latestRegion.lastAttestation?.observer
+                      .slice(0, 4)
+                      .concat("...", latestRegion.lastAttestation.observer.slice(-4)) ?? "-",
+                },
+              ]}
+            />
+          </Panel>
+        </section>
+      ) : null}
     </div>
   );
 }
@@ -814,8 +914,19 @@ export function DashboardShell() {
   const activeTab = getTab(searchParams.get("tab"));
   const selectedPubkey = searchParams.get("pubkey");
   const { snapshot, loading } = useSonarSnapshot();
+  const [now, setNow] = useState(0);
   const activeObserverCount = snapshot?.observers.filter((observer) => observer.active).length ?? 0;
   const activeRegionCount = snapshot?.regions.filter((region) => !region.stale).length ?? 0;
+  const updatedSeconds =
+    (snapshot?.network.updatedSeconds ?? 0) +
+    (snapshot && now > snapshot.fetchedAt
+      ? Math.floor((now - snapshot.fetchedAt) / 1000)
+      : 0);
+
+  useEffect(() => {
+    const freshness = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(freshness);
+  }, []);
 
   return (
     <main className="mx-auto grid max-w-7xl gap-5 px-[1.1rem] pb-[4.8rem] pt-[7.4rem] min-[760px]:grid-cols-[17rem_minmax(0,1fr)] max-md:pt-[6.2rem]">
@@ -831,8 +942,8 @@ export function DashboardShell() {
           tab={activeTab}
           status={
             snapshot ? (
-              <StatusPill active>
-                Updated {snapshot.network.updatedSeconds}s ago
+              <StatusPill active={activeRegionCount > 0}>
+                Updated {formatRelativeAge(updatedSeconds)}
               </StatusPill>
             ) : (
               <StatusPill>{loading ? "Fetching on-chain" : "Unavailable"}</StatusPill>
@@ -843,7 +954,7 @@ export function DashboardShell() {
         {!snapshot ? (
           <LoadingDashboard />
         ) : activeTab === "network" ? (
-          <NetworkView snapshot={snapshot} />
+          <NetworkView snapshot={snapshot} loading={loading} />
         ) : activeTab === "observers" ? (
           <ObserversView snapshot={snapshot} selectedPubkey={selectedPubkey} />
         ) : (

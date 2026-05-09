@@ -12,6 +12,7 @@ import {
 import { NetworkSidebar } from "@/components/dashboard/network-sidebar";
 import { ClientDiversityPanel } from "@/components/dashboard/client-diversity-panel";
 import { useSonarSnapshot } from "@/hooks/use-sonar-snapshot";
+import { formatRelativeAge } from "@/lib/time-format";
 
 function shortKey(value: string) {
   return `${value.slice(0, 4)}...${value.slice(-4)}`;
@@ -109,9 +110,12 @@ export default function NetworkPage() {
       : 0);
   const activeRegions = regions.filter((region) => !region.stale);
   const activeRegionCount = activeRegions.length;
+  const hasActiveRegions = activeRegionCount > 0;
   const avgStakeReach = Math.round(
-    activeRegions.reduce((sum, region) => sum + region.reachableStakePct, 0) /
-      Math.max(activeRegions.length, 1),
+    (hasActiveRegions ? activeRegions : regions).reduce(
+      (sum, region) => sum + region.reachableStakePct,
+      0,
+    ) / Math.max((hasActiveRegions ? activeRegions : regions).length, 1),
   );
   const totalClients =
     network.agaveCount +
@@ -162,7 +166,11 @@ export default function NetworkPage() {
         eyebrow="Oracle / Devnet"
         title="Network overview"
         description="One surface for current health, regional divergence, and the on-chain state every downstream consumer reads."
-        aside={<StatusPill active>Updated {updatedSeconds}s ago</StatusPill>}
+        aside={
+          <StatusPill active={hasActiveRegions}>
+            Updated {formatRelativeAge(updatedSeconds)}
+          </StatusPill>
+        }
       />
 
       <section className="mb-12">
@@ -193,7 +201,7 @@ export default function NetworkPage() {
                     buckets excluded from aggregation.
                   </p>
                 </div>
-                <StatusPill active>
+                <StatusPill active={hasActiveRegions}>
                   {activeRegionCount} active regions
                 </StatusPill>
               </div>
@@ -260,7 +268,9 @@ export default function NetworkPage() {
         <SectionTitle
           action={
             <span className="whitespace-nowrap text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[rgba(245,255,249,0.36)]">
-              {attestationHistory.length} latest events
+              {loading && attestationHistory.length === 0
+                ? "Loading events"
+                : `${attestationHistory.length} latest events`}
             </span>
           }
         >
@@ -316,7 +326,13 @@ export default function NetworkPage() {
               ))}
             </tbody>
           </table>
-          {attestationHistory.length === 0 ? (
+          {loading && attestationHistory.length === 0 ? (
+            <div className="grid gap-2 p-4">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <Skeleton key={index} className="h-9 rounded-[10px]" />
+              ))}
+            </div>
+          ) : attestationHistory.length === 0 ? (
             <div className="p-4 text-[0.72rem] text-[rgba(245,255,249,0.62)]">
               No recent attestation events found.
             </div>

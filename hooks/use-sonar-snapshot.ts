@@ -9,7 +9,7 @@ type SonarState = {
   error: string | null;
 };
 
-const REFRESH_MS = 15_000;
+const REFRESH_MS = 3_000;
 
 let state: SonarState = {
   snapshot: null,
@@ -39,6 +39,8 @@ async function fetchSnapshot(): Promise<SonarSnapshot> {
 function refreshSnapshot() {
   if (inFlight || (typeof document !== "undefined" && document.hidden))
     return inFlight;
+
+  emit({ ...state, loading: true });
 
   inFlight = fetchSnapshot()
     .then((snapshot) => emit({ snapshot, loading: false, error: null }))

@@ -168,20 +168,31 @@ export function MetricCard({
 export function StatusPill({
   children,
   active = false,
+  tone,
 }: {
   children: React.ReactNode;
   active?: boolean;
+  tone?: "neutral";
 }) {
+  const neutral = tone === "neutral";
+
   return (
     <span
       className={cn(
         "inline-flex items-center gap-[0.4rem] rounded-[12px] border px-[0.62rem] py-[0.42rem] text-[0.64rem] font-semibold uppercase tracking-[0.18em]",
-        active
+        neutral
+          ? "border-[rgba(255,255,255,0.1)] bg-black/80 text-[rgba(245,255,249,0.62)]"
+          : active
           ? "border-[rgba(45,225,155,0.24)] bg-[rgba(4,16,12,0.86)] text-[#2de19b]"
           : "border-[rgba(255,75,105,0.28)] bg-[rgba(50,8,16,0.82)] text-[#ff4b69]",
       )}
     >
-      {active ? (
+      {neutral ? (
+        <span
+          className="h-[0.38rem] w-[0.38rem] rounded-full bg-[rgba(245,255,249,0.42)]"
+          aria-hidden="true"
+        />
+      ) : active ? (
         <span
           className="h-[0.38rem] w-[0.38rem] rounded-full bg-[#2de19b] shadow-[0_0_0.9rem_rgba(45,225,155,0.24)]"
           aria-hidden="true"

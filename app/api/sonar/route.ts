@@ -24,19 +24,17 @@ import {
 } from "@/lib/sonar-static";
 
 export const dynamic = "force-dynamic";
-
-const RPC_URL =
-  process.env.SOLANA_RPC_URL ||
-  process.env.NEXT_PUBLIC_SOLANA_RPC_URL ||
-  "https://api.devnet.solana.com";
+const RPC_URL = process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com";
 const PROGRAM_ID =
   process.env.S0NAR_PROGRAM_ID || process.env.NEXT_PUBLIC_S0NAR_PROGRAM_ID;
 const HISTORY_LIMIT = 10;
 const INTERNAL_HISTORY_LIMIT = 60;
-const SIGNATURE_SCAN_LIMIT = 80;
-const TX_SCAN_LIMIT = 32;
-const HISTORY_TIMEOUT_MS = 8_000;
-const SNAPSHOT_TTL_MS = 10_000;
+const SIGNATURE_PAGE_LIMIT = 100;
+const MAX_SIGNATURE_PAGES = 3;
+const TX_SCAN_LIMIT = 160;
+const TX_BATCH_SIZE = 20;
+const HISTORY_TIMEOUT_MS = 15_000;
+const SNAPSHOT_TTL_MS = 2_000;
 const REGION_IDS_BY_NAME: Record<string, RegionScoreView["id"]> = {
   Asia: "asia",
   US: "us",
@@ -54,6 +52,7 @@ const client = createS0narClient({ connection, programId });
 let cachedSnapshot: SonarSnapshot | null = null;
 let cachedSnapshotAt = 0;
 let snapshotPromise: Promise<SonarSnapshot> | null = null;
+let cachedAttestationHistory: AttestationHistoryItem[] = [];
 
 class Reader {
   private offset = 8;
@@ -153,25 +152,35 @@ function clientDiversityFromCounts(counts: {
 function mapRegion(
   region: RegionScore,
   activeObserverRegions: Set<string>,
+  latestByRegion: Map<string, AttestationHistoryItem>,
 ): RegionScoreView {
   const name = appRegionName(region.region);
   const stale = !activeObserverRegions.has(name);
+  const lastAttestation = latestByRegion.get(name);
 
   return {
     id: REGION_IDS_BY_NAME[name] ?? "other",
     name,
-    score: stale ? 0 : region.healthScore,
-    reachability: stale ? 0 : region.reachabilityPct,
-    latency: stale ? 0 : region.slotLatencyMs,
-    rtt: stale ? 0 : roundTenth(region.avgRttUs / 1000),
+    score: region.healthScore || lastAttestation?.score || 0,
+    reachability: region.reachabilityPct || lastAttestation?.reachability || 0,
+    latency: region.slotLatencyMs || lastAttestation?.slotLatency || 0,
+    rtt: roundTenth(region.avgRttUs / 1000),
     observers: region.observerCount,
     stale,
-    reachableStakePct: region.reachableStakePct ?? 0,
+    reachableStakePct:
+      region.reachableStakePct ?? lastAttestation?.reachableStakePct ?? 0,
     agaveCount: region.agaveCount ?? 0,
     firedancerCount: region.firedancerCount ?? 0,
     jitoCount: region.jitoCount ?? 0,
     solanaLabsCount: region.solanaLabsCount ?? 0,
     otherCount: region.otherCount ?? 0,
+    lastUpdatedSlot: Number(
+      region.lastUpdatedSlot || lastAttestation?.slot || 0,
+    ),
+    lastUpdatedSeconds: lastAttestation?.timestamp
+      ? Math.max(0, Math.floor(Date.now() / 1000 - lastAttestation.timestamp))
+      : undefined,
+    lastAttestation,
   };
 }
 
@@ -188,13 +197,17 @@ function mapObserver(observer: Observer, currentSlot: bigint): ObserverView {
     slot: Number(latest.slot || observer.lastAttestationSlot),
     reach,
     rtt: roundTenth(latest.avgRttUs / 1000),
-    score: active ? scoreFromAttestation(reach, latest.slotLatencyMs) : 0,
+    score: scoreFromAttestation(reach, latest.slotLatencyMs),
     p95Rtt: roundTenth(latest.p95RttUs / 1000),
     slotLatency: latest.slotLatencyMs,
     tpuReachable: latest.tpuReachable,
     tpuProbed: latest.tpuProbed,
     registeredAt: Number(observer.registeredAt),
     attestationCount: Number(observer.attestationCount),
+    lastUpdatedSeconds:
+      latest.timestamp > BigInt(0)
+        ? Math.max(0, Math.floor(Date.now() / 1000 - Number(latest.timestamp)))
+        : undefined,
     reachableStakePct: latest.reachableStakePct ?? 0,
     agaveCount: latest.agaveCount ?? 0,
     firedancerCount: latest.firedancerCount ?? 0,
@@ -233,6 +246,43 @@ function buildAttestationHistory(observers: Observer[]) {
     .map(attestationFromObserver)
     .filter((item): item is AttestationHistoryItem => Boolean(item))
     .sort((a, b) => b.slot - a.slot);
+}
+
+function attestationKey(item: AttestationHistoryItem) {
+  return `${item.observer}:${item.slot}`;
+}
+
+function mergeAttestationHistory(
+  ...histories: AttestationHistoryItem[][]
+): AttestationHistoryItem[] {
+  const byKey = new Map<string, AttestationHistoryItem>();
+
+  for (const history of histories) {
+    for (const item of history) {
+      const key = attestationKey(item);
+      const existing = byKey.get(key);
+      const syntheticSignature = `${item.observer}-${item.slot}`;
+      const existingSynthetic =
+        existing?.signature === `${existing?.observer}-${existing?.slot}`;
+      const itemSynthetic = item.signature === syntheticSignature;
+
+      byKey.set(key, {
+        ...existing,
+        ...item,
+        timestamp: item.timestamp ?? existing?.timestamp,
+        reachableStakePct:
+          item.reachableStakePct ?? existing?.reachableStakePct,
+        signature:
+          existing && !existingSynthetic && itemSynthetic
+            ? existing.signature
+            : item.signature,
+      });
+    }
+  }
+
+  return [...byKey.values()]
+    .sort((a, b) => b.slot - a.slot || (b.timestamp ?? 0) - (a.timestamp ?? 0))
+    .slice(0, INTERNAL_HISTORY_LIMIT);
 }
 
 function eventDiscriminator(name: string) {
@@ -314,54 +364,83 @@ function decodeAttestationEvent(
 }
 
 async function fetchAttestationHistory(): Promise<AttestationHistoryItem[]> {
-  const signatures = await rpcRequest<RpcSignature[]>(
-    "getSignaturesForAddress",
-    [client.programId.toBase58(), { limit: SIGNATURE_SCAN_LIMIT }],
-    "s0nar-signatures",
-  );
+  const signatures: RpcSignature[] = [];
+  let before: string | undefined;
+
+  for (let page = 0; page < MAX_SIGNATURE_PAGES; page += 1) {
+    const pageSignatures = await rpcRequest<RpcSignature[]>(
+      "getSignaturesForAddress",
+      [
+        client.programId.toBase58(),
+        {
+          limit: SIGNATURE_PAGE_LIMIT,
+          ...(before ? { before } : {}),
+        },
+      ],
+      `s0nar-signatures-${page}`,
+    );
+
+    signatures.push(...pageSignatures);
+    before = pageSignatures.at(-1)?.signature;
+
+    if (
+      pageSignatures.length < SIGNATURE_PAGE_LIMIT ||
+      signatures.length >= TX_SCAN_LIMIT
+    ) {
+      break;
+    }
+  }
+
   const events: AttestationHistoryItem[] = [];
   const seen = new Set<string>();
-  const transactions = await Promise.all(
-    signatures
-      .filter((item) => !item.err)
-      .slice(0, TX_SCAN_LIMIT)
-      .map(async ({ signature, blockTime }) => {
-        try {
-          const transaction = await rpcRequest<RpcTransaction | null>(
-            "getTransaction",
-            [
+  const candidates = signatures
+    .filter((item) => !item.err)
+    .slice(0, TX_SCAN_LIMIT);
+
+  for (let index = 0; index < candidates.length; index += TX_BATCH_SIZE) {
+    const transactions = await Promise.all(
+      candidates
+        .slice(index, index + TX_BATCH_SIZE)
+        .map(async ({ signature, blockTime }) => {
+          try {
+            const transaction = await rpcRequest<RpcTransaction | null>(
+              "getTransaction",
+              [
+                signature,
+                {
+                  encoding: "json",
+                  commitment: "confirmed",
+                  maxSupportedTransactionVersion: 0,
+                },
+              ],
               signature,
-              {
-                encoding: "json",
-                commitment: "confirmed",
-                maxSupportedTransactionVersion: 0,
-              },
-            ],
-            signature,
-            5_000,
-          );
-          return { signature, blockTime, transaction };
-        } catch {
-          return null;
-        }
-      }),
-  );
+              8_000,
+            );
+            return { signature, blockTime, transaction };
+          } catch {
+            return null;
+          }
+        }),
+    );
 
-  for (const item of transactions) {
-    if (!item?.transaction?.meta?.logMessages) continue;
+    for (const item of transactions) {
+      if (!item?.transaction?.meta?.logMessages) continue;
 
-    for (const log of item.transaction.meta.logMessages) {
-      if (!log.startsWith("Program data: ")) continue;
-      const data = Buffer.from(log.replace("Program data: ", ""), "base64");
-      const event = decodeAttestationEvent(
-        data,
-        item.signature,
-        item.transaction.blockTime ?? item.blockTime,
-      );
-      if (!event || seen.has(event.signature)) continue;
-      seen.add(event.signature);
-      events.push(event);
+      for (const log of item.transaction.meta.logMessages) {
+        if (!log.startsWith("Program data: ")) continue;
+        const data = Buffer.from(log.replace("Program data: ", ""), "base64");
+        const event = decodeAttestationEvent(
+          data,
+          item.signature,
+          item.transaction.blockTime ?? item.blockTime,
+        );
+        if (!event || seen.has(attestationKey(event))) continue;
+        seen.add(attestationKey(event));
+        events.push(event);
+      }
     }
+
+    if (events.length >= INTERNAL_HISTORY_LIMIT) break;
   }
 
   return events
@@ -413,7 +492,7 @@ function buildClientDiversity(network: NetworkHealth, observers: Observer[]) {
 async function getOnchainSnapshot(): Promise<SonarSnapshot> {
   const historyPromise = timeout(
     fetchAttestationHistory(),
-    [],
+    null,
     HISTORY_TIMEOUT_MS,
   );
   const [network, registry, sdkObservers, slot] = await Promise.all([
@@ -429,11 +508,20 @@ async function getOnchainSnapshot(): Promise<SonarSnapshot> {
   ]);
   const currentSlot = BigInt(slot);
   const eventHistory = await historyPromise;
-  const attestationHistory =
-    eventHistory.length > 0
-      ? eventHistory
-      : buildAttestationHistory(sdkObservers);
+  const observerHistory = buildAttestationHistory(sdkObservers);
+  const attestationHistory = mergeAttestationHistory(
+    cachedAttestationHistory,
+    eventHistory ?? [],
+    observerHistory,
+  );
+  cachedAttestationHistory = attestationHistory;
   const recentGlobalAttestations = attestationHistory.slice(0, HISTORY_LIMIT);
+  const latestByRegion = new Map<string, AttestationHistoryItem>();
+  for (const attestation of attestationHistory) {
+    if (!latestByRegion.has(attestation.region)) {
+      latestByRegion.set(attestation.region, attestation);
+    }
+  }
   const activeObserverRegions = new Set(
     sdkObservers
       .filter(
@@ -450,16 +538,20 @@ async function getOnchainSnapshot(): Promise<SonarSnapshot> {
     return view;
   });
   const regions = network.regionScores.map((region) =>
-    mapRegion(region, activeObserverRegions),
+    mapRegion(region, activeObserverRegions, latestByRegion),
   );
   const activeObservers = sdkObservers.filter(
     (observer) => observer.isActive && !isObserverStale(observer, currentSlot),
   );
+  const observerRttSource =
+    activeObservers.length > 0 ? activeObservers : sdkObservers;
+  const networkIsStale = isStale(network, currentSlot);
+  const latestAttestation = attestationHistory[0];
   const avgRttMs =
-    activeObservers.reduce(
+    observerRttSource.reduce(
       (total, observer) => total + observer.latestAttestation.avgRttUs / 1000,
       0,
-    ) / Math.max(activeObservers.length, 1);
+    ) / Math.max(observerRttSource.length, 1);
 
   return {
     source: "onchain",
@@ -471,12 +563,12 @@ async function getOnchainSnapshot(): Promise<SonarSnapshot> {
     regions,
     observers: observers.sort((a, b) => b.score - a.score),
     network: {
-      score: isStale(network, currentSlot) ? 0 : network.healthScore,
-      reachability: isStale(network, currentSlot)
-        ? 0
-        : network.tpuReachabilityPct,
+      score: network.healthScore || latestAttestation?.score || 0,
+      reachability:
+        network.tpuReachabilityPct || latestAttestation?.reachability || 0,
       rtt: roundTenth(avgRttMs),
-      slotLatency: network.avgSlotLatencyMs,
+      slotLatency:
+        network.avgSlotLatencyMs || latestAttestation?.slotLatency || 0,
       activeObservers: activeObservers.length,
       totalObservers: registry.observerCount || observers.length,
       activeRegions: network.activeRegionCount,
@@ -489,7 +581,14 @@ async function getOnchainSnapshot(): Promise<SonarSnapshot> {
               0,
               Math.floor(Date.now() / 1000 - Number(network.lastUpdatedTs)),
             )
-          : 0,
+          : latestAttestation?.timestamp
+            ? Math.max(
+                0,
+                Math.floor(Date.now() / 1000 - latestAttestation.timestamp),
+              )
+            : networkIsStale
+              ? 0
+              : 0,
       agaveCount: network.agaveCount ?? 0,
       firedancerCount: network.firedancerCount ?? 0,
       jitoCount: network.jitoCount ?? 0,

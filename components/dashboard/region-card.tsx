@@ -35,6 +35,8 @@ export function RegionCard({
   const firedancerPct = total > 0 ? (firedancerCount / total) * 100 : 0;
   const jitoPct = total > 0 ? (jitoCount / total) * 100 : 0;
   const otherPct = total > 0 ? (otherCount / total) * 100 : 0;
+  const hasReport =
+    score > 0 || reachability > 0 || latency > 0 || reachableStakePct > 0 || total > 0;
 
   const inner = (
     <>
@@ -45,37 +47,58 @@ export function RegionCard({
             {name}
           </div>
           <div className="mt-[0.45rem] text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[rgba(245,255,249,0.36)]">
-            {stale ? "Excluded / stale" : latency === 0 ? "Synced ✓" : `${latency}ms slot lag`}
+            {!hasReport
+              ? "No report"
+              : stale
+                ? "Last known / stale"
+                : latency === 0
+                  ? "Synced"
+                  : `${latency}ms slot lag`}
           </div>
         </div>
-        <div className="shrink-0 text-[2.2rem] font-semibold leading-[0.9] tracking-[-0.08em] text-[#2de19b]">
-          {stale ? "—" : score}
+        <div
+          className={cn(
+            "shrink-0 text-[2.2rem] font-semibold leading-[0.9] tracking-[-0.08em]",
+            stale ? "text-[rgba(245,255,249,0.58)]" : "text-[#2de19b]",
+          )}
+        >
+          {hasReport ? score : "—"}
         </div>
       </div>
 
       <div className="mt-5 flex justify-between text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[rgba(245,255,249,0.36)]">
         <span>Reachability</span>
-        <span>{stale ? "—" : `${reachability}%`}</span>
+        <span>{reachability}%</span>
       </div>
       <div className="mt-3 h-[0.38rem] overflow-hidden rounded-full bg-[rgba(255,255,255,0.05)]">
         <div
-          className="h-full rounded-[inherit] bg-[linear-gradient(90deg,rgba(45,225,155,0.55),#2de19b)]"
-          style={{ width: stale ? "0%" : `${reachability}%` }}
+          className={cn(
+            "h-full rounded-[inherit]",
+            stale
+              ? "bg-[rgba(245,255,249,0.28)]"
+              : "bg-[linear-gradient(90deg,rgba(45,225,155,0.55),#2de19b)]",
+          )}
+          style={{ width: `${reachability}%` }}
         />
       </div>
 
       <div className="mt-3 flex justify-between text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[rgba(245,255,249,0.36)]">
         <span>Stake reach</span>
-        <span>{stale ? "—" : `${reachableStakePct}%`}</span>
+        <span>{reachableStakePct}%</span>
       </div>
       <div className="mt-1.5 h-[0.38rem] overflow-hidden rounded-full bg-[rgba(255,255,255,0.05)]">
         <div
-          className="h-full rounded-[inherit] bg-[linear-gradient(90deg,rgba(45,225,155,0.35),rgba(45,225,155,0.7))]"
-          style={{ width: stale ? "0%" : `${reachableStakePct}%` }}
+          className={cn(
+            "h-full rounded-[inherit]",
+            stale
+              ? "bg-[rgba(245,255,249,0.22)]"
+              : "bg-[linear-gradient(90deg,rgba(45,225,155,0.35),rgba(45,225,155,0.7))]",
+          )}
+          style={{ width: `${reachableStakePct}%` }}
         />
       </div>
 
-      {!stale && total > 0 ? (
+      {total > 0 ? (
         <div className="mt-3">
           <div className="mb-1.5 text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[rgba(245,255,249,0.36)]">
             Client mix
@@ -111,7 +134,6 @@ export function RegionCard({
           selected
             ? "border-[rgba(45,225,155,0.24)] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_24px_60px_rgba(0,0,0,0.28),0_24px_64px_rgba(45,225,155,0.08)]"
             : "border-[rgba(255,255,255,0.06)]",
-          stale && "opacity-50",
         )}
       >
         {inner}
@@ -123,7 +145,6 @@ export function RegionCard({
     <Panel
       className={cn(
         "min-h-[12.8rem] p-[1.15rem]",
-        stale && "opacity-50",
         selected && "border-[rgba(45,225,155,0.24)]",
       )}
     >

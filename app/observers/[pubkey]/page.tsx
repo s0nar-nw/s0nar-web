@@ -13,6 +13,7 @@ import {
   StatusPill,
 } from "@/components/sonar-ui";
 import { useSonarSnapshot } from "@/hooks/use-sonar-snapshot";
+import { formatRelativeAge } from "@/lib/time-format";
 import { ChevronLeft } from "lucide-react";
 
 const MIN_STAKE_SOL = 0.1;
@@ -118,6 +119,11 @@ export default function ObserverDetailPage() {
     ? new Date(observer.registeredAt * 1000).toLocaleString()
     : registeredSlot.toLocaleString();
   const recentAttestations = observer.recentAttestations ?? [];
+  const hasLastKnown =
+    observer.slot > 0 ||
+    observer.score > 0 ||
+    observer.reach > 0 ||
+    (observer.attestationCount ?? 0) > 0;
 
   return (
     <PageFrame wide>
@@ -135,6 +141,8 @@ export default function ObserverDetailPage() {
         aside={
           observer.active ? (
             <StatusPill active>Active</StatusPill>
+          ) : hasLastKnown ? (
+            <StatusPill>Inactive / last known</StatusPill>
           ) : (
             <StatusPill>Inactive</StatusPill>
           )
@@ -152,11 +160,20 @@ export default function ObserverDetailPage() {
                 Health
               </h2>
               <p className="mt-[0.95rem] max-w-lg text-[0.76rem] leading-[1.6] text-[rgba(245,255,249,0.62)]">
-                This is the most recent attestation submitted by this observer.
+                {observer.active
+                  ? "This is the most recent attestation submitted by this observer."
+                  : hasLastKnown
+                    ? "Showing the last known attestation while this observer is inactive."
+                    : "This observer has not submitted an attestation yet."}
               </p>
+              {observer.lastUpdatedSeconds !== undefined ? (
+                <p className="mt-2 text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[rgba(245,255,249,0.36)]">
+                  Last updated {formatRelativeAge(observer.lastUpdatedSeconds)}
+                </p>
+              ) : null}
             </div>
             <div className="text-right text-[clamp(3rem,7vw,5rem)] font-semibold leading-none tracking-[-0.1em] text-[#2de19b] [font-variant-numeric:tabular-nums]">
-              {observer.score}
+              {hasLastKnown ? observer.score : "—"}
             </div>
           </div>
 
@@ -233,7 +250,9 @@ export default function ObserverDetailPage() {
         <SectionTitle
           action={
             <span className="whitespace-nowrap text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[rgba(245,255,249,0.36)]">
-              {recentAttestations.length} latest events
+              {loading && recentAttestations.length === 0
+                ? "Loading events"
+                : `${recentAttestations.length} latest events`}
             </span>
           }
         >
@@ -277,7 +296,13 @@ export default function ObserverDetailPage() {
               ))}
             </tbody>
           </table>
-          {recentAttestations.length === 0 ? (
+          {loading && recentAttestations.length === 0 ? (
+            <div className="grid gap-2 p-4">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <Skeleton key={index} className="h-9 rounded-[10px]" />
+              ))}
+            </div>
+          ) : recentAttestations.length === 0 ? (
             <div className="p-4 text-[0.72rem] text-[rgba(245,255,249,0.62)]">
               No recent attestation events found for this observer.
             </div>

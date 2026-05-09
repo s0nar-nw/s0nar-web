@@ -245,6 +245,9 @@ export type RegionScoreView = {
   jitoCount: number;
   solanaLabsCount: number;
   otherCount: number;
+  lastUpdatedSlot: number;
+  lastUpdatedSeconds?: number;
+  lastAttestation?: AttestationHistoryItem;
 };
 
 export type ObserverView = {
@@ -262,6 +265,7 @@ export type ObserverView = {
   tpuProbed?: number;
   registeredAt?: number;
   attestationCount?: number;
+  lastUpdatedSeconds?: number;
   recentAttestations?: AttestationHistoryItem[];
   reachableStakePct?: number;
   agaveCount?: number;
