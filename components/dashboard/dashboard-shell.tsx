@@ -279,7 +279,7 @@ function NetworkView({
     <div className="grid gap-6">
       <Panel accent className="p-[1.6rem]">
         <div className="grid gap-8 min-[901px]:grid-cols-[minmax(13rem,0.62fr)_minmax(0,1fr)] min-[901px]:items-stretch">
-          <div className="flex flex-col justify-between gap-8">
+          <div className="flex flex-col justify-start gap-5">
             <div className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[#2de19b]">
               Primary signal
             </div>

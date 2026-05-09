@@ -1,10 +1,6 @@
 import type { Metadata } from "next";
-import { Geist, Google_Sans } from "next/font/google";
 import "./globals.css";
 import { AppShell } from "@/components/app-shell";
-import { cn } from "@/lib/utils";
-
-const geist = Google_Sans({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
   title: "s0nar",
@@ -17,7 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={cn("font-sans", geist.variable)}>
+    <html lang="en" className="font-sans">
       <body
         className="antialiased selection:bg-primary selection:text-primary-foreground"
         suppressHydrationWarning
