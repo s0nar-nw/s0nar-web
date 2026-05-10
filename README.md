@@ -1,3 +1,14 @@
+## s0nar-ecosystem
+
+<p>
+    <a href="https://github.com/s0nar-nw/s0nar-observer">s0nar-observer</a>
+    <a href="https://github.com/s0nar-nw/s0nar-program">s0nar-program</a>
+    <a href="https://github.com/s0nar-nw/s0nar-sdk">s0nar-sdk</a>
+    <a href="https://github.com/s0nar-nw/s0nar-agent">s0nar-agent</a>
+</p>
+
+---
+
 <p align="center">
   <img src="public/logo.svg" alt="s0nar" width="320" />
 </p>
@@ -30,28 +41,28 @@
 
 ## Pages
 
-| Route | Description |
-|---|---|
-| `/` | Landing page with interactive globe, features, and CTA |
-| `/network` | Live network overview — global health, regional scores, client diversity, attestation history |
-| `/dashboard` | Detailed dashboard with observer breakdown and network metrics |
-| `/observers` | Observer list with per-observer drill-down (`/observers/[pubkey]`) |
-| `/regions` | Regional coverage map, last-known region fallback, and latest attested region |
-| `/program` | On-chain program state explorer |
-| `/docs` | SDK documentation with syntax-highlighted code examples |
+| Route        | Description                                                                                   |
+| ------------ | --------------------------------------------------------------------------------------------- |
+| `/`          | Landing page with interactive globe, features, and CTA                                        |
+| `/network`   | Live network overview — global health, regional scores, client diversity, attestation history |
+| `/dashboard` | Detailed dashboard with observer breakdown and network metrics                                |
+| `/observers` | Observer list with per-observer drill-down (`/observers/[pubkey]`)                            |
+| `/regions`   | Regional coverage map, last-known region fallback, and latest attested region                 |
+| `/program`   | On-chain program state explorer                                                               |
+| `/docs`      | SDK documentation with syntax-highlighted code examples                                       |
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Framework | [Next.js 16](https://nextjs.org) (App Router, Turbopack) |
-| Language | TypeScript |
-| Styling | Tailwind CSS v4 |
-| Animations | [Motion](https://motion.dev) (Framer Motion) |
-| Globe | [COBE](https://cobe.vercel.app) |
-| Blockchain | [@solana/web3.js](https://solana-labs.github.io/solana-web3.js/), [s0nar-sdk](https://www.npmjs.com/package/s0nar-sdk) |
-| UI | [Radix UI](https://www.radix-ui.com/), [Lucide Icons](https://lucide.dev), [React Icons](https://react-icons.github.io/react-icons/) |
-| Package Manager | pnpm |
+| Layer           | Technology                                                                                                                           |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Framework       | [Next.js 16](https://nextjs.org) (App Router, Turbopack)                                                                             |
+| Language        | TypeScript                                                                                                                           |
+| Styling         | Tailwind CSS v4                                                                                                                      |
+| Animations      | [Motion](https://motion.dev) (Framer Motion)                                                                                         |
+| Globe           | [COBE](https://cobe.vercel.app)                                                                                                      |
+| Blockchain      | [@solana/web3.js](https://solana-labs.github.io/solana-web3.js/), [s0nar-sdk](https://www.npmjs.com/package/s0nar-sdk)               |
+| UI              | [Radix UI](https://www.radix-ui.com/), [Lucide Icons](https://lucide.dev), [React Icons](https://react-icons.github.io/react-icons/) |
+| Package Manager | pnpm                                                                                                                                 |
 
 ## Getting Started
 
@@ -75,10 +86,10 @@ The app will be available at [http://localhost:3000](http://localhost:3000).
 
 ### Environment Variables
 
-| Variable | Default | Description |
-|---|---|---|
-| `SOLANA_RPC_URL` | `https://api.devnet.solana.com` | Server-only Solana RPC endpoint. Use this for paid RPC keys. |
-| `S0NAR_PROGRAM_ID` | s0nar devnet program ID | Override the on-chain program address |
+| Variable           | Default                         | Description                                                  |
+| ------------------ | ------------------------------- | ------------------------------------------------------------ |
+| `SOLANA_RPC_URL`   | `https://api.devnet.solana.com` | Server-only Solana RPC endpoint. Use this for paid RPC keys. |
+| `S0NAR_PROGRAM_ID` | s0nar devnet program ID         | Override the on-chain program address                        |
 
 Do not put paid RPC keys in `NEXT_PUBLIC_*` variables. The browser only calls `/api/sonar`; RPC credentials should stay server-side.
 
