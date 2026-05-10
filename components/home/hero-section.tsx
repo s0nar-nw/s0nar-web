@@ -21,22 +21,9 @@ export function HeroSection() {
         transition={{ duration: 0.8, ease: "easeOut" }}
         className="relative z-10 flex max-w-[42rem] flex-col items-start text-left md:absolute md:left-[var(--hero-gutter)] md:top-1/2 md:-translate-y-1/2"
       >
-        {/* Eyebrow badge */}
-        {/* <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="mb-5 inline-flex items-center gap-2 rounded-[12px] border border-[#2de19b]/24 bg-[rgba(4,16,12,0.86)] px-3 py-2"
-        >
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#2de19b]" />
-          <span className="text-xs font-medium tracking-wide text-[#2de19b]">
-            Devnet
-          </span>
-        </motion.div> */}
-
         {/* Headline */}
         <h1 className="max-w-[11ch] bg-[linear-gradient(180deg,#ffffff_0%,#dfffee_44%,#2de19b_100%)] bg-clip-text text-[3.15rem] font-semibold leading-[0.95] tracking-[-0.045em] text-transparent sm:text-7xl sm:tracking-[-0.055em]">
-          Network <span>Health</span>, on-chain
+          See Solana before it breaks
           <span className="text-primary">.</span>
         </h1>
 
@@ -47,9 +34,7 @@ export function HeroSection() {
           transition={{ delay: 0.25, duration: 0.8 }}
           className="mt-5 max-w-[36ch] text-[0.82rem] font-medium leading-[1.65] text-neutral-400 sm:max-w-[38ch] sm:text-sm"
         >
-          s0nar shows whether Solana is reachable, slow, or healthy across
-          regions. Check the live score, observer activity, validator client
-          diversity, and the on-chain state behind it.
+          s0nar tracks Solana’s global health reachability latency and live status
         </motion.p>
 
         {/* CTAs */}
@@ -62,9 +47,7 @@ export function HeroSection() {
           <ActionLink href="/network" primary>
             Open dashboard
           </ActionLink>
-          <ActionLink href="/docs">
-            SDK docs
-          </ActionLink>
+          <ActionLink href="/docs">SDK docs</ActionLink>
         </motion.div>
 
         {/* Stats row — fills the empty bottom-left */}
