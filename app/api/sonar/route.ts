@@ -545,6 +545,10 @@ async function getOnchainSnapshot(): Promise<SonarSnapshot> {
   );
   const observerRttSource =
     activeObservers.length > 0 ? activeObservers : sdkObservers;
+  const totalValidatorsProbed = observerRttSource.reduce(
+    (total, observer) => total + observer.latestAttestation.tpuProbed,
+    0,
+  );
   const networkIsStale = isStale(network, currentSlot);
   const latestAttestation = attestationHistory[0];
   const avgRttMs =
@@ -575,6 +579,7 @@ async function getOnchainSnapshot(): Promise<SonarSnapshot> {
       totalRegions: regions.length,
       lastUpdatedSlot: Number(network.lastUpdatedSlot),
       totalAttestations: Number(network.totalAttestations),
+      totalValidatorsProbed,
       updatedSeconds:
         network.lastUpdatedTs > BigInt(0)
           ? Math.max(

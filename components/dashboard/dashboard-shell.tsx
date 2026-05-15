@@ -272,6 +272,7 @@ function NetworkView({
     { label: "Slot latency", value: slotLatencyValue(network.slotLatency), hint: "Slot propagation" },
     { label: "Quorum", value: `${network.activeObservers} / ${network.totalObservers}`, hint: "Active observers" },
     { label: "Stake Reach", value: `${avgStakeReach}%`, hint: "% of cluster stake reachable" },
+    { label: "Validators Probed", value: network.totalValidatorsProbed.toLocaleString(), hint: "TPU endpoints sampled" },
     { label: "Agave Share", value: `${agavePct}%`, hint: "Validators running Agave client" },
   ] as const;
 

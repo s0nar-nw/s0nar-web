@@ -307,6 +307,7 @@ export type SonarSnapshot = {
     totalRegions: number;
     lastUpdatedSlot: number;
     totalAttestations: number;
+    totalValidatorsProbed: number;
     updatedSeconds: number;
     agaveCount: number;
     firedancerCount: number;
