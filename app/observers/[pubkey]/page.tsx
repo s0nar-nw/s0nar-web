@@ -119,6 +119,7 @@ export default function ObserverDetailPage() {
     ? new Date(observer.registeredAt * 1000).toLocaleString()
     : registeredSlot.toLocaleString();
   const recentAttestations = observer.recentAttestations ?? [];
+  const totalAttestations = observer.attestationCount ?? recentAttestations.length;
   const hasLastKnown =
     observer.slot > 0 ||
     observer.score > 0 ||
@@ -201,6 +202,12 @@ export default function ObserverDetailPage() {
               label="P95 RTT"
               value={`${p95Rtt}ms`}
               hint={`Slot ${observer.slot.toLocaleString()}`}
+            />
+            <MetricCard
+              label="Total attestations"
+              value={totalAttestations.toLocaleString()}
+              hint="Submitted by observer"
+              accent
             />
           </div>
         </Panel>
@@ -321,6 +328,7 @@ export default function ObserverDetailPage() {
   region:             ${observer.region},
   is_active:          ${observer.active},
   stake_lamports:     ${Math.round(observer.stake * 1e9)},
+  attestation_count:  ${totalAttestations},
   latest_attestation: Attestation {
     tpu_reachable:    ${observer.tpuReachable ?? observer.reach},
     tpu_probed:       ${observer.tpuProbed ?? 100},

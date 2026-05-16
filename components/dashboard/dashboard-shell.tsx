@@ -617,6 +617,7 @@ function ObserverDetailView({ observer }: { observer: ObserverView }) {
     ? new Date(observer.registeredAt * 1000).toLocaleString()
     : registeredSlot.toLocaleString();
   const recentAttestations = observer.recentAttestations ?? [];
+  const totalAttestations = observer.attestationCount ?? recentAttestations.length;
   const history = recentAttestations.map((item) => item.score).reverse();
 
   return (
@@ -656,6 +657,12 @@ function ObserverDetailView({ observer }: { observer: ObserverView }) {
             <MetricCard label="Avg RTT" value={`${avgRtt}ms`} hint="Median response latency" />
             <MetricCard label="Slot latency" value={slotLatencyValue(slotLatency)} hint="Below stale threshold" />
             <MetricCard label="P95 RTT" value={`${p95Rtt}ms`} hint={`Slot ${observer.slot.toLocaleString()}`} />
+            <MetricCard
+              label="Total attestations"
+              value={totalAttestations.toLocaleString()}
+              hint="Submitted by observer"
+              accent
+            />
           </div>
         </Panel>
 
